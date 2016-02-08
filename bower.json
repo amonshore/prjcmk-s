@@ -1,0 +1,18 @@
+{
+  "name": "prjcmk-s",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "narsenico <not_amon-dev@yahoo.it>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/amonshore/prjcmk-s",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

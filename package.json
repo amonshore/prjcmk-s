@@ -1,0 +1,23 @@
+{
+  "name": "prjcmk-s",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amonshore/prjcmk-s.git"
+  },
+  "author": "narsenico",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amonshore/prjcmk-s/issues"
+  },
+  "homepage": "https://github.com/amonshore/prjcmk-s#readme",
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "express": "^4.13.4"
+  }
+}
