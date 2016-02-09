@@ -5,17 +5,6 @@ var Schema = mongoose.Schema,
 var url = 'mongodb://localhost:27017/prjcmk-s';
 
 // schema
-var Release = mongoose.model('Release', new Schema({
-    cid: {
-        type: String
-    },
-    number: {
-        type: Number
-    },
-    date: {
-        type: String
-    }
-}));
 var Comic = mongoose.model('Comic', new Schema({
     cid: {
         type: String,
@@ -26,10 +15,33 @@ var Comic = mongoose.model('Comic', new Schema({
     name: {
         type: String,
         required: true
-    },
-    releases: [ Release.schema ]
+    }
 }));
+var Release = mongoose.model('Release', new Schema({
+    relid: { // combinazione di cid e number
+        type: String,
+        index: {
+            unique: true
+        }
+    },
+    cid: {
+        type: String
+    },
+    number: {
+        type: Number
+    },
+    date: {
+        type: String
+    },
+    notes: {
+        type: String
+    }
+}));
+
 Comic.on('index', function(err) {
+    if (err) console.error(err);
+});
+Release.on('index', function(err) {
     if (err) console.error(err);
 });
 

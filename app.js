@@ -18,6 +18,8 @@ app.use(bodyParser.urlencoded({
 app.use('/', express.static(__dirname + '/public'));
 // routing per versione 1 di /comics
 app.use('/v1/comics', require('./rest/comics_v1'));
+// routing per versione 1 di /releases
+app.use('/v1/releases', require('./rest/releases_v1'));
 // routing per versione 1 di /categories
 app.use('/v1/categories', require('./rest/categories_v1'));
 // in ascolto sulla porta 3000
