@@ -3,7 +3,7 @@ var _ = require('lodash');
 var express = require('express');
 var router = express.Router();
 //campi di Release che possono essere restituiti
-var RELEASE_FIELDS = ['cid', 'number', 'date', 'notes'];
+var RELEASE_FIELDS = ['cid', 'number', 'date', 'price', 'flags', 'notes'];
 
 function releaseFromBody(req, res, next) {
     req.release = _.pick(req.body, RELEASE_FIELDS);

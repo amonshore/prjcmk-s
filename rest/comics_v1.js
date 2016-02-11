@@ -3,7 +3,9 @@ var _ = require('lodash');
 var express = require('express');
 var router = express.Router();
 //campi di Comic che possono essere restituiti
-var COMIC_FIELDS = ['cid', 'name'];
+var COMIC_FIELDS = ['cid', 'name', 'series', 'publisher', 'authors', 'price',
+    'periodicity', 'reserved', 'notes', 'image', 'categories'
+];
 
 function comicFromBody(req, res, next) {
     req.comic = _.pick(req.body, COMIC_FIELDS);

@@ -15,7 +15,16 @@ var Comic = mongoose.model('Comic', new Schema({
     name: {
         type: String,
         required: true
-    }
+    },
+    series: String,
+    publisher: String,
+    authors: String,
+    price: Number,
+    periodicity: String,
+    reserved: String,
+    notes: String,
+    image: String,
+    categories: [String]
 }));
 var Release = mongoose.model('Release', new Schema({
     relid: { // combinazione di cid e number
@@ -24,18 +33,21 @@ var Release = mongoose.model('Release', new Schema({
             unique: true
         }
     },
-    cid: {
-        type: String
+    cid: String,
+    number: Number,
+    date: String,
+    price: Number,
+    flags: Number,
+    notes: String
+}));
+var Category = mongoose.model('Category', new Schema({
+    catid: {
+        type: String,
+        index: {
+            unique: true
+        }
     },
-    number: {
-        type: Number
-    },
-    date: {
-        type: String
-    },
-    notes: {
-        type: String
-    }
+    descr: String
 }));
 
 Comic.on('index', function(err) {
@@ -56,3 +68,4 @@ function init(cb) {
 exports.init = init;
 exports.Comic = Comic;
 exports.Release = Release;
+exports.Category = Category;
