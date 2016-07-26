@@ -51,15 +51,28 @@ router.delete('/:wcid', function(req, res) {
 });
 
 // crea fumetto
-router.post('/', comicFromBody, function(req, res) {
-    new db.Comic(req.comic)
-        .save(function(err) {
+router.post('/', function(req, res) {
+    if (_.isArray(req.body)) {
+        var arr = _.map(req.body, function(item) {
+            return _.pick(item, COMIC_FIELDS);
+        });
+        db.Comic.collection.insert(arr, function(err, resp) {
             if (err) {
                 res.status(500).json(err);
             } else {
                 res.sendStatus(200);
             }
         });
+    } else {
+        new db.Comic(_.pick(req.body, COMIC_FIELDS))
+            .save(function(err) {
+                if (err) {
+                    res.status(500).json(err);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
+    }
 });
 
 // aggiorna fumetto
@@ -91,6 +104,7 @@ router.get('/:cid', function(req, res) {
 
 // estraggo tutti i fumetti
 router.get('/', function(req, res) {
+    console.log('- country:', req.get('X-prjcmk-country'));
     db.Comic.find({}, COMIC_FIELDS.join(' '), function(err, comics) {
         if (err) {
             res.status(500).json(err);

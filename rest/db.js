@@ -49,6 +49,10 @@ var Category = mongoose.model('Category', new Schema({
     },
     descr: String
 }));
+// TODO
+var Sync = mongoose.model('Sync', new Schema({
+
+}));
 
 Comic.on('index', function(err) {
     if (err) console.error(err);
