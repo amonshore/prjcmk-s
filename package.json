@@ -23,5 +23,8 @@
     "express": "^4.13.4",
     "lodash": "^4.3.0",
     "mongoose": "^4.4.2"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
   }
 }

@@ -33,7 +33,7 @@ app.get('/v1/hello', function(req, res) {
     res.status(200).json({ "message": "Hello dear, this is version 1 of prjcmk-s" });
 });
 // in ascolto sulla porta 3000
-app.listen(3000, function() {
+app.listen(3000, '0.0.0.0', function() {
     console.log('listen on', chalk.red(3000));
     db.init(function(err) {
         if (err) {
