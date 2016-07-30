@@ -14,6 +14,9 @@ var cssLibs = [
     'bower_components/sweetalert/dist/sweetalert.css'
 ];
 
+/**
+ * Copia le librerie js e css nelle corrette cartelle pubbliche.
+ */
 gulp.task('prepare', () => {
     jsLibs.forEach(f => {
         gulp.src(f)
@@ -27,18 +30,27 @@ gulp.task('prepare', () => {
     });
 });
 
+/**
+ * Se un file HTML viene modificato lo capia nella corretta cartella pubblica.
+ */
 gulp.task('watch-html', () => {
     return watch('src/**/*.html', { ignoreInitial: false })
         .pipe(debug({ title: 'changed:' }))
         .pipe(gulp.dest('public'));
 });
 
+/**
+ * Se un file CSS viene modificato lo capia nella corretta cartella pubblica.
+ */
 gulp.task('watch-css', () => {
     return watch('src/**/*.css', { ignoreInitial: false })
         .pipe(debug({ title: 'changed:' }))
         .pipe(gulp.dest('public'));
 });
 
+/**
+ * Se un file JS viene modificato, lo traduce con babel, quindi lo capia nella corretta cartella pubblica dopo.
+ */
 gulp.task('watch-js', () => {
     return watch('src/**/*.js', { ignoreInitial: false })
         .pipe(debug({ title: 'changed:' })).pipe(babel())

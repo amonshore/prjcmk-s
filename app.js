@@ -28,6 +28,8 @@ app.use('/v1/releases', require('./rest/releases_v1'));
 app.use('/v1/categories', require('./rest/categories_v1'));
 // routing per versione 1 di /sync
 app.use('/v1/sync', require('./rest/sync_v1'));
+// routine per comandi remoti
+app.use('/remote', require('./rest/remote'));
 //
 app.get('/v1/hello', function(req, res) {
     res.status(200).json({ "message": "Hello dear, this is version 1 of prjcmk-s" });
