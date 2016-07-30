@@ -4,16 +4,28 @@ var gulp = require('gulp'),
     babel = require('gulp-babel');
 
 var jsLibs = [
-    'bower_components/jquery/dist/jquery.min.js'
+    'bower_components/jquery/dist/jquery.min.js',
+    'bower_components/mustache.js/mustache.min.js',
+    'bower_components/rxjs/dist/rx.lite.js',
+    'bower_components/sweetalert/dist/sweetalert.min.js'
+];
+var cssLibs = [
+    'bower_components/normalize-css/normalize.css',
+    'bower_components/sweetalert/dist/sweetalert.css'
 ];
 
-gulp.task('prepare', () =>
+gulp.task('prepare', () => {
     jsLibs.forEach(f => {
         gulp.src(f)
             .pipe(debug({ title: 'prepare:' }))
             .pipe(gulp.dest('public/js'));
-    })
-);
+    });
+    cssLibs.forEach(f => {
+        gulp.src(f)
+            .pipe(debug({ title: 'prepare:' }))
+            .pipe(gulp.dest('public/css'));
+    });
+});
 
 gulp.task('watch-html', () => {
     return watch('src/**/*.html', { ignoreInitial: false })

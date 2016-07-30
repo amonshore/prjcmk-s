@@ -1,12 +1,26 @@
 'use strict';
 
-;
 (function ($) {
+    var comicsTemplate = $('#comicsTemplate').html();
+
     $(function () {
-        $.get('/v1/comics').then(function (data) {
-            $('.comics').text(JSON.stringify(data, null, 2));
-        }).fail(function (e) {
-            $('.comics').text(JSON.stringify(e, null, 2));
+        $('.btnload').click(function () {
+            loadComics();
         });
+        loadComics();
     });
+
+    /**
+     * Carica la lista dei comics.
+     */
+    function loadComics() {
+        $('.comics-list .comics').remove();
+        $.get('/v1/comics').then(function (data) {
+            $('.comics-list').append(data.map(function (comics) {
+                return Mustache.render(comicsTemplate, comics);
+            }));
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            swal({ title: 'Load comics', text: textStatus + ': ' + errorThrown, type: 'error' });
+        });
+    }
 })(jQuery);
