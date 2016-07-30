@@ -53,7 +53,9 @@ gulp.task('watch-css', () => {
  */
 gulp.task('watch-js', () => {
     return watch('src/**/*.js', { ignoreInitial: false })
-        .pipe(debug({ title: 'changed:' })).pipe(babel())
+        .pipe(debug({ title: 'changed:' }))
+        .pipe(babel())
+        .on('error', console.error.bind(console))
         .pipe(gulp.dest('public'));
 });
 
