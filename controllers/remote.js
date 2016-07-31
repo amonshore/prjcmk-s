@@ -29,13 +29,23 @@ router.get('/list', (req, res) => {
 });
 
 router.get('/stop', (req, res) => {
-	spawn('forever', ['stop', 'app.js']);
-	res.status(200).send('ok');
+    spawn('forever', ['stop', 'app.js']);
+    res.status(200).send('ok');
 });
 
 router.get('/restart', (req, res) => {
-	spawn('forever', ['restart', 'app.js']);
-	res.status(200).send('ok');
+    spawn('forever', ['restart', 'app.js']);
+    res.status(200).send('ok');
+});
+
+router.get('/', (req, res) => {
+    forever.list(true, (err, processes) => {
+        if (err) {
+            res.status(500).send(err);
+        } else {
+            res.render('remote.mustache', { "processes": parseProcesses(processes || '') });
+        }
+    });
 });
 
 module.exports = router;

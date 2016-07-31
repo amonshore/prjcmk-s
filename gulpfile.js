@@ -53,14 +53,14 @@ gulp.task('clean:css', () => {
  * Pulisce la cartella pubblica realtiva ai file html.
  */
 gulp.task('clean:html', () => {
-    return del('public/**/*.html');
+    return del(['public/**/*.html', 'public/**/*.mustache']);
 });
 
 /**
  * Se un file HTML viene modificato lo capia nella corretta cartella pubblica.
  */
 gulp.task('watch:html', () => {
-    return watch('src/**/*.html', { ignoreInitial: false })
+    return watch(['src/**/*.html', 'src/**/*.mustache'], { ignoreInitial: false })
         .pipe(debug({ title: 'changed:' }))
         .pipe(gulp.dest('public'));
 });

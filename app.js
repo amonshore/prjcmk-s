@@ -1,9 +1,10 @@
-var chalk = require('chalk');
-var dateFormat = require('dateformat');
-var db = require('./rest/db');
-var bodyParser = require('body-parser');
-var express = require('express');
-var app = express();
+const chalk = require('chalk'),
+    dateFormat = require('dateformat'),
+    db = require('./controllers/db'),
+    bodyParser = require('body-parser'),
+    express = require('express'),
+    mustacheExpress = require('mustache-express'),
+    app = express();
 // var options = {
 //     root: __dirname + '/public/',
 //     dotfiles: 'deny',
@@ -12,6 +13,13 @@ var app = express();
 //     }
 // };
 // log
+// registro i file .mustache perche' vengano renderizzati con mustacheExpress
+app.engine('mustache', mustacheExpress());
+app.set('view engine', 'mustache');
+app.set('views', __dirname + '/public/views');
+// disabilito la cache delle viste, da riabilitare in produzione
+app.disable('view cache');
+// request log
 app.use(function log(req, res, next) {
     console.log('[%s] %s %s',
         chalk.gray(dateFormat('HH:MM:ss.l')),
@@ -27,32 +35,15 @@ app.use(bodyParser.urlencoded({
 }));
 // file statici
 app.use('/', express.static(__dirname + '/public'));
-//
-// app.use('/spa/:resource', (req, res) => {
-//     const fileName = req.params.resource + '.html';
-//     res.sendFile(fileName, options, err => {
-//         if (err) {
-//             console.log(err);
-//             res.status(err.status).end();
-//         } else {
-//             console.log('Sent:', fileName);
-//         }
-//     });
-// });
-// routing per versione 1 di /comics
-app.use('/v1/comics', require('./rest/comics_v1'));
-// routing per versione 1 di /releases
-app.use('/v1/releases', require('./rest/releases_v1'));
-// routing per versione 1 di /categories
-app.use('/v1/categories', require('./rest/categories_v1'));
-// routing per versione 1 di /sync
-app.use('/v1/sync', require('./rest/sync_v1'));
-// routine per comandi remoti
-app.use('/remote', require('./rest/remote'));
-//
-app.get('/v1/hello', function(req, res) {
+app.get('/hello', function(req, res) {
     res.status(200).json({ "message": "Hello dear, this is version 1 of prjcmk-s" });
 });
+// routing
+app.use('/comics', require('./controllers/comics_v1'));
+app.use('/releases', require('./controllers/releases_v1'));
+app.use('/categories', require('./controllers/categories_v1'));
+app.use('/sync', require('./controllers/sync'));
+app.use('/remote', require('./controllers/remote'));
 // in ascolto sulla porta 3000
 app.listen(3000, '0.0.0.0', function() {
     console.log('listen on', chalk.red(3000));

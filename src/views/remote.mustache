@@ -13,7 +13,7 @@
             </tr>
         </thead>
         <tbody>
-            <script id="processRowTemplate" type="x-tmpl-mustache">
+            {{#processes}}
                 <tr>
                     <td>{{uid}}</td>
                     <td>{{command}}</td>
@@ -23,7 +23,7 @@
                     <td><a href="#" data-action="stop" data-pid="{{pid}}">stop</a></td>
                     <td><a href="#" data-action="restart" data-pid="{{pid}}">restart</a></td>
                 </tr>
-            </script>
+            {{/processes}}
         </tbody>
     </table>
 </div>

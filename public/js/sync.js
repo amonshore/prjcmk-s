@@ -5,6 +5,6 @@
 	$('#qrcode').qrcode({
 		width: 256,
 		height: 256,
-		text: location.origin + '/v1/sync?sid=' + Date.now()
+		text: location.origin + '/v1/sync?sid=' + $('#qrcode').attr('data-sid')
 	});
 })(jQuery);

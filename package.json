@@ -22,7 +22,8 @@
     "dateformat": "^1.0.12",
     "express": "^4.13.4",
     "lodash": "^4.3.0",
-    "mongoose": "^4.4.2"
+    "mongoose": "^4.4.2",
+    "mustache-express": "^1.2.2"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
