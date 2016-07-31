@@ -2,13 +2,7 @@
 
 (function ($) {
     var processRowTemplate = $('#processRowTemplate').html();
-
-    $(function () {
-        $('.btnload').click(function () {
-            loadProcesses();
-        });
-        loadProcesses();
-    });
+    loadProcesses();
 
     /**
      * Carica i processi "forever" e gestisce le azioni su di essi.

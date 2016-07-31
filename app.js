@@ -4,6 +4,13 @@ var db = require('./rest/db');
 var bodyParser = require('body-parser');
 var express = require('express');
 var app = express();
+// var options = {
+//     root: __dirname + '/public/',
+//     dotfiles: 'deny',
+//     headers: {
+//         'x-timestamp': Date.now()
+//     }
+// };
 // log
 app.use(function log(req, res, next) {
     console.log('[%s] %s %s',
@@ -20,6 +27,18 @@ app.use(bodyParser.urlencoded({
 }));
 // file statici
 app.use('/', express.static(__dirname + '/public'));
+//
+// app.use('/spa/:resource', (req, res) => {
+//     const fileName = req.params.resource + '.html';
+//     res.sendFile(fileName, options, err => {
+//         if (err) {
+//             console.log(err);
+//             res.status(err.status).end();
+//         } else {
+//             console.log('Sent:', fileName);
+//         }
+//     });
+// });
 // routing per versione 1 di /comics
 app.use('/v1/comics', require('./rest/comics_v1'));
 // routing per versione 1 di /releases

@@ -1,59 +1,26 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>prjcmk-s :: remote</title>
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimal-ui" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="yes" />
-    <meta name="Author" content="narsenico" />
-    <meta name="description" lang="it-IT" content="prjcmk web" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="-1" />
-    <link rel="stylesheet" type="text/css" href="css/normalize.css">
-    <link rel="stylesheet" type="text/css" href="css/sweetalert.css">
-    <link rel="stylesheet" type="text/css" href="css/default.css">
-    <link rel="stylesheet" type="text/css" href="css/remote.css">
-</head>
-
-<body>
-    <div class="page-header">
-        <h1>prjcmk-s :: remote<button class="btnload success right">Reload</button></h1>
-    </div>
-    <div class="page-body">
-        <table class="process-list">
-            <thead>
-                <tr>
-                    <th>uid</th>
-                    <th>command</th>
-                    <th>script</th>
-                    <th>forever</th>
-                    <th>pid</th>
-                    <th colspan="2">action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <script id="processRowTemplate" type="x-tmpl-mustache">
-                    <tr>
-                        <td>{{uid}}</td>
-                        <td>{{command}}</td>
-                        <td>{{script}}</td>
-                        <td>{{forever}}</td>
-                        <td>{{pid}}</td>
-                        <td><a href="#" data-action="stop" data-pid="{{pid}}">stop</a></td>
-                        <td><a href="#" data-action="restart" data-pid="{{pid}}">restart</a></td>
-                    </tr>
-                </script>
-            </tbody>
-        </table>
-    </div>
-</body>
-<script type="text/javascript" src="js/jquery.min.js"></script>
-<script type="text/javascript" src="js/rx.lite.js"></script>
-<script type="text/javascript" src="js/mustache.min.js"></script>
-<script type="text/javascript" src="js/sweetalert.min.js"></script>
-<script type="text/javascript" src="js/utility.js"></script>
-<script type="text/javascript" src="js/remote.js"></script>
-
-</html>
+<link rel="stylesheet" type="text/css" href="css/remote.css">
+<table class="process-list">
+    <thead>
+        <tr>
+            <th>uid</th>
+            <th>command</th>
+            <th>script</th>
+            <th>forever</th>
+            <th>pid</th>
+            <th colspan="2">action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <script id="processRowTemplate" type="x-tmpl-mustache">
+            <tr>
+                <td>{{uid}}</td>
+                <td>{{command}}</td>
+                <td>{{script}}</td>
+                <td>{{forever}}</td>
+                <td>{{pid}}</td>
+                <td><a href="#" data-action="stop" data-pid="{{pid}}">stop</a></td>
+                <td><a href="#" data-action="restart" data-pid="{{pid}}">restart</a></td>
+            </tr>
+        </script>
+    </tbody>
+</table>

@@ -18,24 +18,13 @@
 
 <body>
     <div class="page-header">
-        <h1>prjcmk-s v1 <button class="btnload success right">Reload</button></h1>
-        <div class="searchbox">
-            <input type="text" placeholder="search">
-        </div>
+        <h1>prjcmk-s v1 <button class="btnreload success right">Reload</button></h1>
     </div>
-    <div class="page-body">
-        <div class="comics-list">
-            <script id="comicsTemplate" type="x-tmpl-mustache">
-                <div class="comics" data-id="{{_id}}">
-                    <span class="cid">{{cid}}</span><span class="name">{{name}}</span>
-                </div>
-            </script>
-        </div>
-        <div class="clear"></div>
-        <pre class="debug"></pre>
-    </div>
+    <div class="page-body"></div>
+    <pre class="debug"></pre>
 </body>
 <script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery.qrcode.min.js"></script>
 <script type="text/javascript" src="js/rx.lite.js"></script>
 <script type="text/javascript" src="js/mustache.min.js"></script>
 <script type="text/javascript" src="js/sweetalert.min.js"></script>

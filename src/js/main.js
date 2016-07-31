@@ -1,22 +1,35 @@
 ($ => {
-    const comicsTemplate = $('#comicsTemplate').html();
+    /**
+     * Carica la pagina specificata da "name", se vuoto viene usato la parte hash dell'url
+     *
+     * @param      {string}   name    nome della pagina da caricare
+     * @return     {boolean}  true se c'e' una pagina da caricare, false
+     *                        altrimenti
+     */
+    function loadPage(name) {
+        const page = name || location.hash.substr(1);
+        if (page) {
+            $('.page-body').load('/' + page + '.html',
+                (responseText, textStatus, jqXHR) => {
+                    if (textStatus === 'success') {
+                        $.getScript('/js/' + page + '.js');
+                    } else {
+                        swal('Page not found');
+                    }
+                });
+            return true;
+        } else {
+            return false;
+        }
+    }
 
+    // evento scatenato al cambio della parte hash
+    window.onhashchange = loadPage;
+    // document ready
     $(() => {
-        $('.btnload').click(() => {
-            loadComics();
-        });
-        loadComics();
+        if (!loadPage()) {
+            //loadPage('initsync');
+        }
     });
 
-    /**
-     * Carica la lista dei comics.
-     */
-    function loadComics() {
-        $('.comics-list .comics').remove();
-        $.get('/v1/comics').then(data => {
-            $('.comics-list').append(data.map(comics => Mustache.render(comicsTemplate, comics)));
-        }).fail((jqXHR, textStatus, errorThrown) => {
-            swal({title: 'Load comics', text: textStatus + ': ' + errorThrown, type: 'error'});
-        });
-    }
 })(jQuery);

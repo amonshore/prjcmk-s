@@ -1,12 +1,6 @@
 ($ => {
     const processRowTemplate = $('#processRowTemplate').html();
-
-    $(() => {
-        $('.btnload').click(() => {
-            loadProcesses();
-        });
-        loadProcesses();
-    });
+    loadProcesses();
 
     /**
      * Carica i processi "forever" e gestisce le azioni su di essi.

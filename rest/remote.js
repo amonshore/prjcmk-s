@@ -22,10 +22,8 @@ router.get('/list', (req, res) => {
     forever.list(true, (err, processes) => {
         if (err) {
             res.status(500).send(err);
-        } else if (processes) {
-            res.json(parseProcesses(processes));
         } else {
-            res.send('No processes');
+            res.json(parseProcesses(processes || ''));
         }
     });
 });
