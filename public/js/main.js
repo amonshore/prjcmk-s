@@ -13,7 +13,12 @@
         if (page) {
             $('.page-body').load('/' + page + '.html', function (responseText, textStatus, jqXHR) {
                 if (textStatus === 'success') {
-                    $.getScript('/js/' + page + '.js');
+                    $('.page-body').attr('data-page', page);
+                    // sono costretto a caricare il file js in un secondo momento
+                    // visto che se uso il tag <script> nella pagina html viene caricato in modalita' sincrona
+                    $.getScript('/js/' + page + '.js').fail(function () {
+                        swal('Script not found');
+                    });
                 } else {
                     swal('Page not found');
                 }
@@ -25,11 +30,13 @@
     }
 
     // evento scatenato al cambio della parte hash
-    window.onhashchange = loadPage;
-    // document ready
+    window.onhashchange = function () {
+        loadPage();
+    };
+    // document ready, se non ci sono pagine specificate nell'hash, carico una pagina di default
     $(function () {
         if (!loadPage()) {
-            //loadPage('initsync');
+            loadPage('initsync');
         }
     });
 })(jQuery);
