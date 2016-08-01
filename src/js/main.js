@@ -13,7 +13,7 @@
                     $('.page-body').attr('data-page', page);
                     // sono costretto a caricare il file js in un secondo momento
                     // visto che se uso il tag <script> nella pagina html viene caricato in modalita' sincrona
-                    $.getScript('/js/' + page + '.js').fail(() => {
+                    $.getScript('/js/' + page.replace('/', '_') + '.js').fail(() => {
                         swal('Script not found');
                     });
                 } else {

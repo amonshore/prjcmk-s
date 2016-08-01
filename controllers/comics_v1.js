@@ -1,3 +1,4 @@
+"use strict";
 var db = require('./db');
 var _ = require('lodash');
 var express = require('express');

@@ -1,10 +1,13 @@
+"use strict";
 const chalk = require('chalk'),
     dateFormat = require('dateformat'),
+    Q = require('q'),
     mongoose = require('mongoose'),
     Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId,
     url = 'mongodb://localhost:27017/prjcmk-s';
-
+//
+mongoose.Promise = Q.Promise;
 // schema
 const Comic = mongoose.model('Comic', new Schema({
     cid: {
@@ -57,6 +60,7 @@ const Sync = mongoose.model('Sync', new Schema({
             unique: true
         }
     },
+    // timestamp dell'utlima operazione di sync
     lastSync: Number,
     remoteIp: String
 }));
@@ -67,16 +71,6 @@ Comic.on('index', function(err) {
 Release.on('index', function(err) {
     if (err) console.error(err);
 });
-
-function init() {
-    mongoose.connection.on('open', function() {
-        console.log('mongodb connected on', chalk.green(url));
-    });
-    mongoose.connection.on('error', function(err) {
-        console.log('mongodb error', chalk.bgRed(err));
-    });
-    mongoose.connect(url);
-}
 
 const utils = {
     /**
@@ -107,6 +101,22 @@ const utils = {
         return { "code": err.code, "descr": this.errors[err.code] || "Generic error" };
     }
 };
+
+/**
+ * Crea la connessione al DB e prepara le tabelle.
+ *
+ * @return     {promise}  una promessa
+ */
+function init() {
+    return mongoose.connect(url)
+        .then(() => {
+            console.log('mongodb connected on', chalk.green(url));
+        })
+        .then(Sync.remove().then(() => {
+            console.log(' - sync cleared');
+        }));
+        // TODO pulire le altre tabelle usate da sync
+}
 
 exports.init = init;
 exports.utils = utils;

@@ -1,0 +1,24 @@
+<link rel="stylesheet" type="text/css" href="css/sync.css">
+<h1>sync list (debug)</h1>
+<div class="page">
+    <table class="center">
+        <thead>
+            <tr>
+                <th>sid</th>
+                <th>lastSync</th>
+                <th>remoteIp</th>
+                <th>action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#syncitems}}
+            <tr>
+                <td>{{sid}}</td>
+                <td>{{lastSync}}</td>
+                <td>{{remoteIp}}</td>
+                <td><a href="#" data-action="sync" data-sid="{{sid}}">sync</a></td>
+            </tr>
+            {{/syncitems}}
+        </tbody>
+    </table>
+</div>

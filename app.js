@@ -1,3 +1,9 @@
+/**
+ * prjcmk-s by narsenico
+ * supporto web per l'applicazione prjcmk (comikku)
+ */
+
+"use strict";
 const chalk = require('chalk'),
     dateFormat = require('dateformat'),
     db = require('./controllers/db'),
@@ -20,7 +26,7 @@ app.set('views', __dirname + '/public/views');
 // disabilito la cache delle viste, da riabilitare in produzione
 app.disable('view cache');
 // request log
-app.use(function log(req, res, next) {
+app.use((req, res, next) => {
     console.log('[%s] %s %s',
         chalk.gray(dateFormat('HH:MM:ss.l')),
         chalk.bgGreen(req.method),
@@ -35,7 +41,7 @@ app.use(bodyParser.urlencoded({
 }));
 // file statici
 app.use('/', express.static(__dirname + '/public'));
-app.get('/hello', function(req, res) {
+app.get('/hello', (req, res) => {
     res.status(200).json({ "message": "Hello dear, this is version 1 of prjcmk-s" });
 });
 // routing
@@ -44,8 +50,12 @@ app.use('/releases', require('./controllers/releases_v1'));
 app.use('/categories', require('./controllers/categories_v1'));
 app.use('/sync', require('./controllers/sync'));
 app.use('/remote', require('./controllers/remote'));
-// in ascolto sulla porta 3000
-app.listen(3000, '0.0.0.0', function() {
-    console.log('listen on', chalk.green(3000));
-    db.init();
+// inizializzo il database
+db.init().then(() => {
+    // in ascolto sulla porta 3000
+    app.listen(3000, '0.0.0.0', () => {
+        console.log('express listen on port', chalk.green(3000));
+    });
+}).catch(err => {
+    console.log(err);
 });

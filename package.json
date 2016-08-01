@@ -1,7 +1,7 @@
 {
   "name": "prjcmk-s",
   "version": "1.0.0",
-  "description": "",
+  "description": "prjcmk web app",
   "main": "app.js",
   "scripts": {
     "test": "node app.js"
@@ -23,7 +23,8 @@
     "express": "^4.13.4",
     "lodash": "^4.3.0",
     "mongoose": "^4.4.2",
-    "mustache-express": "^1.2.2"
+    "mustache-express": "^1.2.2",
+    "q": "^1.4.1"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
