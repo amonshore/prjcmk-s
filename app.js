@@ -23,7 +23,7 @@ app.disable('view cache');
 app.use(function log(req, res, next) {
     console.log('[%s] %s %s',
         chalk.gray(dateFormat('HH:MM:ss.l')),
-        chalk.magenta(req.method),
+        chalk.bgGreen(req.method),
         chalk.cyan(req.originalUrl));
     next();
 });
@@ -46,12 +46,6 @@ app.use('/sync', require('./controllers/sync'));
 app.use('/remote', require('./controllers/remote'));
 // in ascolto sulla porta 3000
 app.listen(3000, '0.0.0.0', function() {
-    console.log('listen on', chalk.red(3000));
-    db.init(function(err) {
-        if (err) {
-            throw err;
-        } else {
-            console.log('db connected');
-        }
-    });
+    console.log('listen on', chalk.green(3000));
+    db.init();
 });

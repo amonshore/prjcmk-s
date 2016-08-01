@@ -23,11 +23,11 @@
     }
 
     $(() => {
-    // evento scatenato al cambio della parte hash
-    window.onhashchange = () => { 
-        loadPage(location.hash.substr(1) || defaultPage); 
-    }
-    // se non ci sono pagine specificate nell'hash, carico una pagina di default
-    loadPage(location.hash.substr(1) || defaultPage);
+        // evento scatenato al cambio della parte hash
+        window.onhashchange = (() => {
+            loadPage(location.hash.substr(1) || defaultPage);
+        });
+        // se non ci sono pagine specificate nell'hash, carico una pagina di default
+        loadPage(location.hash.substr(1) || defaultPage);
     });
 })(jQuery);

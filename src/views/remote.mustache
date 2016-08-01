@@ -1,29 +1,7 @@
-<h1>remote</h1>
+<link rel="stylesheet" type="text/css" href="css/remote.css">
+
+<h1>remote :: {{pid}}</h1>
 <div class="page">
-    <link rel="stylesheet" type="text/css" href="css/remote.css">
-    <table class="process-list">
-        <thead>
-            <tr>
-                <th>uid</th>
-                <th>command</th>
-                <th>script</th>
-                <th>forever</th>
-                <th>pid</th>
-                <th colspan="2">action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#processes}}
-                <tr>
-                    <td>{{uid}}</td>
-                    <td>{{command}}</td>
-                    <td>{{script}}</td>
-                    <td>{{forever}}</td>
-                    <td>{{pid}}</td>
-                    <td><a href="#" data-action="stop" data-pid="{{pid}}">stop</a></td>
-                    <td><a href="#" data-action="restart" data-pid="{{pid}}">restart</a></td>
-                </tr>
-            {{/processes}}
-        </tbody>
-    </table>
+    <button class="danger" data-action="stop">Stop</button>
+    <button data-action="restart">Restart</button>
 </div>

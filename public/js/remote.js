@@ -1,20 +1,19 @@
 'use strict';
 
 (function ($) {
-    $('.process-list>tbody>tr>td>a[data-action]').click(function (e) {
+    $('.page-body[data-page="remote"] button[data-action]').click(function (e) {
         e.stopPropagation();
         e.preventDefault();
 
-        var pid = e.target.attributes['data-pid'].value;
         var action = e.target.attributes['data-action'].value;
 
         swal({
-            title: 'Confirm',
-            text: action.capitalize() + ' process with pid ' + pid + '?',
+            title: action.capitalize() + ' current process?',
+            text: 'This may take a few seconds.',
             showCancelButton: true
         }, function (confirm) {
             if (confirm) {
-                $.get('/remote/' + action + '?pid=' + pid).then(function () {
+                $.get('/remote/' + action).then(function () {
                     // ritardo il refresh altrimenti rischio che il comando non sia stato ancora eseguito
                     setTimeout(function () {
                         document.location.reload(true);
