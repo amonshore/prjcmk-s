@@ -1,21 +1,24 @@
 ($ => {
-    const defaultPage = 'sync';
-
+    // oggetto che andra' a contenere i riferimeti ai JS di tutte le pagine
+    window.JSVIEW = {
+        // "page_name": {
+        //     "ready": function(context) {}
+        // }
+    };
+    
     /**
      * Carica la pagina specificata da "page"
      *
      * @param      {string}   page    nome della pagina da caricare
      */
     function loadPage(page) {
-        $('.page-body').load('/' + page,
+        var $pageBody = $('.page-body');
+        $pageBody.load('/' + page,
             (responseText, textStatus, jqXHR) => {
                 if (textStatus === 'success') {
-                    $('.page-body').attr('data-page', page);
-                    // sono costretto a caricare il file js in un secondo momento
-                    // visto che se uso il tag <script> nella pagina html viene caricato in modalita' sincrona
-                    $.getScript('/js/' + page.replace('/', '_') + '.js').fail(() => {
-                        swal('Script not found');
-                    });
+                    $pageBody.attr('data-page', page);
+                    // lancio lo script della pagina caicata
+                    window.JSVIEW[page] && window.JSVIEW[page].ready($pageBody);
                 } else {
                     swal('Page not found');
                 }
@@ -23,6 +26,8 @@
     }
 
     $(() => {
+        // pagina di default
+        const defaultPage = 'sync';
         // evento scatenato al cambio della parte hash
         window.onhashchange = (() => {
             loadPage(location.hash.substr(1) || defaultPage);
