@@ -62,8 +62,13 @@ const Sync = mongoose.model('Sync', new Schema({
     },
     // timestamp dell'utlima operazione di sync
     lastSync: Number,
-    remoteIp: String
+    remoteIp: String,
+    // stato 0: sid non ancora richiesto, 1: sid richiesto, 2: primi dati da app ricevuti
+    status: Number
 }));
+Sync.NO_SYNC = 0;
+Sync.SYNCED = 1;
+Sync.DATA_RECEIVED = 2;
 
 Comic.on('index', function(err) {
     if (err) console.error(err);

@@ -30,13 +30,27 @@ function removeSyncData(sid) {
     return db.Sync.remove({ "sid": sid }).exec();
 }
 
-router.get('/:sid/:time', (req, res) => {
-
-});
-
-router.post('/:sid/:time', (req, res) => {
-
-});
+/**
+ * Crea un nuovo sid e lo salva sul DB.
+ * Se l'inserimento va male risponde con lo stato 500, altrimenti chiama next().
+ *
+ * @param      {Object}    req     request
+ * @param      {Object}    res     response
+ * @param      {Function}  next    prossimo step da richiamare
+ */
+function newSid(req, res, next) {
+    // il sid deve essere univoco: sommo l'ip (numerico) e il timestamp, tutto negato
+    const now = Date.now();
+    req.newsid = ~(ip2long(req.ip) + now);
+    // registro nel database il sid e il timestamp di generazione in modo da gestire la scadenza
+    new db.Sync({ "sid": req.newsid, "lastSync": now, "remoteIp": req.ip, "status": 0 })
+        .save()
+        .then(() => next())
+        .catch(err => {
+            db.utils.err(err);
+            res.status(500).send(db.utils.parseError(err).descr);
+        });
+}
 
 /**
  * Presetazione del codice di sincronizzazione (sid).
@@ -49,7 +63,7 @@ router.post('/:sid', (req, res) => {
             if (doc) {
                 const now = Date.now();
                 if (doc.lastSync + 30000 > now) {
-                    doc.update({ "lastSync": now }).exec();
+                    doc.update({ "lastSync": now, "status": db.Sync.SYNCED }).exec();
                     res.send('sync ok');
                 } else {
                     removeSyncData(req.params.sid);
@@ -62,7 +76,7 @@ router.post('/:sid', (req, res) => {
         .catch(err => {
             db.utils.err(err);
             res.status(500).send(db.utils.parseError(err).descr);
-        });        
+        });
 });
 
 /**
@@ -78,21 +92,46 @@ router.get('/list', (req, res) => {
 });
 
 /**
- * Crea un nuovo sid e lo salva sul DB.
- * Restituisce la pagina "sync" renderizzata.
+ * Controlla che il sid e' stato richiesto.
  */
-router.get('/', (req, res) => {
-    // il sid deve essere univoco: sommo l'ip (numerico) e il timestamp, tutto negato
-    const now = Date.now();
-    const sid = ~(ip2long(req.ip) + now);
-    // registro nel database il sid e il timestamp di generazione in modo da gestire la scadenza
-    new db.Sync({ "sid": sid, "lastSync": now, "remoteIp": req.ip })
-        .save()
-        .then(() => res.render('sync.mustache', { "sid": sid }))
+router.get('/check/:sid', (req, res) => {
+    db.Sync.findOne({ "sid": req.params.sid })
+        .then(doc => {
+            res.json({
+                "sid": req.params.sid,
+                "synced": (!!doc && doc.status === db.Sync.DATA_RECEIVED)
+            });
+        })
         .catch(err => {
             db.utils.err(err);
             res.status(500).send(db.utils.parseError(err).descr);
         });
+});
+
+/**
+ * NB: attenzione, mantenere sotto /check/:sid
+ * altrimenti quest'ultime verranno interpretate come /:sid(check)/:time(sid)
+ */
+router.get('/:sid/:time', (req, res) => {
+    res.status(503).send('Service Unavailable');
+});
+
+router.post('/:sid/:time', (req, res) => {
+    res.status(503).send('Service Unavailable');
+});
+
+/**
+ * Genera un nuovo sid e lo restituisce.
+ */
+router.get('/newsid', newSid, (req, res) => {
+    res.json({ "sid": req.newsid });
+});
+
+/**
+ * Restituisce la pagina "sync" renderizzata.
+ */
+router.get('/', newSid, (req, res) => {
+    res.render('sync.mustache', { "sid": req.newsid });
 });
 
 module.exports = router;

@@ -12,7 +12,7 @@
      * @param      {string}   page    nome della pagina da caricare
      */
     function loadPage(page) {
-        var $pageBody = $('.page-body');
+        const $pageBody = $('.page-body');
         $pageBody.load('/' + page,
             (responseText, textStatus, jqXHR) => {
                 if (textStatus === 'success') {

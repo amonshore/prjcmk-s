@@ -71,14 +71,42 @@
 'use strict';
 
 (function ($) {
+    var MAX_TIMES = 15;
+    var INTERVAL = 2000;
+
     window.JSVIEW['sync'] = {
         ready: function ready(context) {
-            var code = location.origin + '/v1/sync?sid=' + $('#qrcode', context).attr('data-sid');
-            $('#qrcode', context).attr('title', code).qrcode({
+            var sid = $('#qrcode', context).attr('data-sid');
+            var url = location.origin + '/sync/' + sid;
+            // renderizzo il sid passato con la pagina
+            $('#qrcode', context).attr('title', url).qrcode({
                 width: 256,
                 height: 256,
-                text: code
+                text: url
             });
+            // pulsante per reload pagina
+            $('#btnNewCode', context).click(function (e) {
+                document.location.reload();
+            });
+            // controllo se e' avventua una richiesta del sid dall'app
+            // scaduto il tempo nascondo il qrcode e mostro pulsante per refresh pagina
+            var times = MAX_TIMES;
+            var hnd = setInterval(function () {
+                $.get('/sync/check/' + sid).then(function (data) {
+                    if (data.synced) {
+                        // TODO caricare prossima pagina
+                    } else if (! --times) {
+                        $('#qrcode', context).hide();
+                        $('#btnNewCode', context).show();
+                        clearInterval(hnd);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    clearInterval(hnd);
+                    swal({ title: 'Sync', text: textStatus + ': ' + errorThrown, type: 'error' }, function () {
+                        document.location.reload();
+                    });
+                });
+            }, INTERVAL);
         }
     };
 })(jQuery);
