@@ -10,7 +10,7 @@ const gulp = require('gulp'),
     uglify = require('gulp-uglify'),
     rename = require('gulp-rename'),
     concat = require('gulp-concat'),
-    conf = require('./conf.json');
+    conf = require('./gulpconf.json');
 
 const jsLibs = [
     'bower_components/jquery/dist/jquery.min.js',
@@ -123,7 +123,7 @@ gulp.task('make:js', () => {
  * Invia i file al server via FTP.
  */
 gulp.task('publish', () => {
-    return gulp.src(['app.js', 'public/**/*', 'controllers/**/*'], { base: '.' })
+    return gulp.src(['app.js', 'conf.json', 'public/**/*', 'controllers/**/*'], { base: '.' })
         .pipe(ftp(conf.ftp))
         .pipe(gutil.noop());
 });
