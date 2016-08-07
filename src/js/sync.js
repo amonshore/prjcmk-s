@@ -1,13 +1,15 @@
 ($ => {
-    const MAX_TIMES = 15;
     const INTERVAL = 2000;
 
     window.JSVIEW['sync'] = {
         ready: (context) => {
-            const sid = $('#qrcode', context).attr('data-sid');
+            const $qrcode = $('#qrcode', context);
+            const sid = $qrcode.attr('data-sid');
             const url = location.origin + '/sync/' + sid;
+            const timeout = +$qrcode.attr('data-timeout') || 30000;
+            let times = timeout / INTERVAL;
             // renderizzo il sid passato con la pagina
-            $('#qrcode', context)
+            $qrcode
                 .attr('title', url)
                 .qrcode({
                     width: 256,
@@ -20,14 +22,13 @@
             });
             // controllo se e' avventua una richiesta del sid dall'app
             // scaduto il tempo nascondo il qrcode e mostro pulsante per refresh pagina
-            let times = MAX_TIMES;
             const hnd = setInterval(() => {
                 $.get('/sync/check/' + sid)
                     .then(data => {
                         if (data.synced) {
                             // TODO caricare prossima pagina
                         } else if (!--times) {
-                            $('#qrcode', context).hide();
+                            $qrcode.hide();
                             $('#btnNewCode', context).show()
                             clearInterval(hnd);
                         }

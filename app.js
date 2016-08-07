@@ -2,7 +2,6 @@
  * prjcmk-s by narsenico
  * supporto web per l'applicazione prjcmk (comikku)
  */
-
 "use strict";
 const chalk = require('chalk'),
     dateFormat = require('dateformat'),
@@ -18,7 +17,6 @@ const chalk = require('chalk'),
 //         'x-timestamp': Date.now()
 //     }
 // };
-// log
 // registro i file .mustache perche' vengano renderizzati con mustacheExpress
 app.engine('mustache', mustacheExpress());
 app.set('view engine', 'mustache');

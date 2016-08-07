@@ -1,5 +1,6 @@
 "use strict";
 const db = require('./db'),
+    conf = require('../conf.json'),
     express = require('express'),
     router = express.Router();
 
@@ -53,33 +54,6 @@ function newSid(req, res, next) {
 }
 
 /**
- * Presetazione del codice di sincronizzazione (sid).
- * Il codice deve essere essere registrato su DB da non più di 30 secondi.
- * Se il sid è scaduto verrà rimosso il record, altrimenti verrà aggiornato.
- */
-router.post('/:sid', (req, res) => {
-    db.Sync.findOne({ "sid": req.params.sid })
-        .then(doc => {
-            if (doc) {
-                const now = Date.now();
-                if (doc.lastSync + 30000 > now) {
-                    doc.update({ "lastSync": now, "status": db.Sync.SYNCED }).exec();
-                    res.send('sync ok');
-                } else {
-                    removeSyncData(req.params.sid);
-                    res.status(403).send('sync expired');
-                }
-            } else {
-                res.status(404).send('sync not found');
-            }
-        })
-        .catch(err => {
-            db.utils.err(err);
-            res.status(500).send(db.utils.parseError(err).descr);
-        });
-});
-
-/**
  * Restituisce la pagina "synclist" renderizzata con il contenuto di Sync.
  */
 router.get('/list', (req, res) => {
@@ -108,16 +82,60 @@ router.get('/check/:sid', (req, res) => {
         });
 });
 
+// NB: attenzione, mantenere sotto /check/:sid altrimenti 
+//  quest'ultime verranno interpretate come /:sid(check)/:time(sid)
+
 /**
- * NB: attenzione, mantenere sotto /check/:sid
- * altrimenti quest'ultime verranno interpretate come /:sid(check)/:time(sid)
+ * Recupera gli aggiornamenti relativi a sid e con timestamp superiore a time.
+ * 
+ * @param      {string} sid codice di sincronizzazione
+ * @param      {number} time timestamp degli ultimi aggiornamenti
  */
 router.get('/:sid/:time', (req, res) => {
+    // TODO
     res.status(503).send('Service Unavailable');
 });
 
+/**
+ * Invio al server dei comics con relative uscite.
+ * Se time è 0 tutti i dati presenti nel db relativi al sid devono essere eliminati 
+ * e sostituiti con quelli appena ricevuti.
+ * 
+ * @param      {string} sid codice di sincronizzazione
+ * @param      {number} time timestamp di riferimento
+ */
 router.post('/:sid/:time', (req, res) => {
+    // TODO con time a 0 aggiornare anche Sync.status
     res.status(503).send('Service Unavailable');
+});
+
+/**
+ * Presetazione del codice di sincronizzazione (sid).
+ * Il codice deve essere essere registrato su DB da non più di n secondi.
+ * Se il sid è scaduto verrà rimosso il record, altrimenti verrà aggiornato.
+ * 
+ * NB: Il timeout viene recuperato da conf.sync.syncIdTimeout
+ */
+router.post('/:sid', (req, res) => {
+    db.Sync.findOne({ "sid": req.params.sid })
+        .then(doc => {
+            if (doc) {
+                const now = Date.now();
+                if (doc.lastSync + conf.sync.syncIdTimeout > now) {
+                    doc.update({ "lastSync": now, "status": db.Sync.SYNCED }).exec();
+                    res.send('sync ok');
+                } else {
+                    removeSyncData(req.params.sid);
+                    res.status(403).send('sync expired');
+                }
+            } else {
+                res.status(404).send('sync not found');
+            }
+        })
+        .catch(err => {
+            db.utils.err(err);
+            res.status(500).send(db.utils.parseError(err).descr);
+        });
 });
 
 /**
@@ -131,7 +149,7 @@ router.get('/newsid', newSid, (req, res) => {
  * Restituisce la pagina "sync" renderizzata.
  */
 router.get('/', newSid, (req, res) => {
-    res.render('sync.mustache', { "sid": req.newsid });
+    res.render('sync.mustache', { "sid": req.newsid, "timeout": conf.sync.syncIdTimeout });
 });
 
 module.exports = router;
