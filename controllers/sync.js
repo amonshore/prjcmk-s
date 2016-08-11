@@ -92,7 +92,7 @@ router.get('/check/:sid', (req, res) => {
  * @param      {number} time timestamp degli ultimi aggiornamenti
  */
 router.get('/:sid/:time', (req, res) => {
-    // TODO
+    // TODO: sync da fare
     res.status(503).send('Service Unavailable');
 });
 
@@ -105,7 +105,9 @@ router.get('/:sid/:time', (req, res) => {
  * @param      {number} time timestamp di riferimento
  */
 router.post('/:sid/:time', (req, res) => {
-    // TODO con time a 0 aggiornare anche Sync.status
+    // TODO: con time a 0 aggiornare anche Sync.status
+    //  { "comics": [ { "cid": 999, "action": action } ], "releases": [] }
+    //  action -> add, upd, del, clear
     res.status(503).send('Service Unavailable');
 });
 

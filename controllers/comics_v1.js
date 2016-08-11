@@ -90,7 +90,7 @@ router.put('/:wcid', comicFromBody, function(req, res) {
 });
 
 router.get('/search', function(req, res) {
-    //TODO
+    // TODO: ricerca fumetto da fare
     res.json([]);
 });
 

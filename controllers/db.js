@@ -28,7 +28,11 @@ const Comic = mongoose.model('Comic', new Schema({
     reserved: String,
     notes: String,
     image: String,
-    categories: [String]
+    categories: [String],
+    sid: {
+        type: String,
+        index: true
+    }
 }));
 const Release = mongoose.model('Release', new Schema({
     relid: { // combinazione di cid e number
@@ -42,7 +46,11 @@ const Release = mongoose.model('Release', new Schema({
     date: String,
     price: Number,
     flags: Number,
-    notes: String
+    notes: String,
+    sid: {
+        type: String,
+        index: true
+    }
 }));
 const Category = mongoose.model('Category', new Schema({
     catid: {
@@ -120,7 +128,7 @@ function init() {
         .then(Sync.remove().then(() => {
             console.log(' - sync cleared');
         }));
-        // TODO pulire le altre tabelle usate da sync
+        // TODO: pulire le altre tabelle usate da sync
 }
 
 exports.init = init;

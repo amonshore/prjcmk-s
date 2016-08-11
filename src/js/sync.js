@@ -5,16 +5,14 @@
         ready: (context) => {
             const $qrcode = $('#qrcode', context);
             const sid = $qrcode.attr('data-sid');
-            const url = location.origin + '/sync/' + sid;
             const timeout = +$qrcode.attr('data-timeout') || 30000;
             let times = timeout / INTERVAL;
             // renderizzo il sid passato con la pagina
             $qrcode
-                .attr('title', url)
                 .qrcode({
                     width: 256,
                     height: 256,
-                    text: url
+                    text: sid
                 });
             // pulsante per reload pagina
             $('#btnNewCode', context).click(e => {
@@ -26,7 +24,7 @@
                 $.get('/sync/check/' + sid)
                     .then(data => {
                         if (data.synced) {
-                            // TODO caricare prossima pagina
+                            // TODO: caricare prossima pagina
                         } else if (!--times) {
                             $qrcode.hide();
                             $('#btnNewCode', context).show()

@@ -77,14 +77,13 @@
         ready: function ready(context) {
             var $qrcode = $('#qrcode', context);
             var sid = $qrcode.attr('data-sid');
-            var url = location.origin + '/sync/' + sid;
             var timeout = +$qrcode.attr('data-timeout') || 30000;
             var times = timeout / INTERVAL;
             // renderizzo il sid passato con la pagina
-            $qrcode.attr('title', url).qrcode({
+            $qrcode.qrcode({
                 width: 256,
                 height: 256,
-                text: url
+                text: sid
             });
             // pulsante per reload pagina
             $('#btnNewCode', context).click(function (e) {
@@ -95,7 +94,7 @@
             var hnd = setInterval(function () {
                 $.get('/sync/check/' + sid).then(function (data) {
                     if (data.synced) {
-                        // TODO caricare prossima pagina
+                        // TODO: caricare prossima pagina
                     } else if (! --times) {
                         $qrcode.hide();
                         $('#btnNewCode', context).show();
