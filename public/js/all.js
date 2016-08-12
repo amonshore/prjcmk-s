@@ -113,8 +113,24 @@
 'use strict';
 
 (function ($) {
+    var fomratters = {
+        'datetime': function datetime(value) {
+            return moment(+value).format('YYYY-MM-DD HH:mm:ss');
+        },
+        'status': function status(value) {
+            return fomratters[value] || value;
+        },
+        '0': 'NO_SYNC',
+        '1': 'SYNCED',
+        '2': 'DATA_RECEIVED'
+    };
+
     window.JSVIEW['sync/list'] = {
         ready: function ready(context) {
+            $('[data-format]', context).each(function (index, el) {
+                el.innerHTML = fomratters[el.attributes['data-format'].value](el.innerText);
+            });
+
             $('a[data-action]', context).click(function (e) {
                 e.stopPropagation();
                 e.preventDefault();
@@ -134,6 +150,12 @@
                                     location.reload();
                                 }).fail(function (jqXHR, textStatus, errorThrown) {
                                     swal({ title: 'Sync', text: textStatus + ': ' + errorThrown, type: 'error' });
+                                });
+                            } else if (action === 'expire') {
+                                $.post('/sync/change/' + sid, { 'lastSync': Date.now() - 30000 }).then(function () {
+                                    location.reload();
+                                }).fail(function (jqXHR, textStatus, errorThrown) {
+                                    swal({ title: 'Expire', text: textStatus + ': ' + errorThrown, type: 'error' });
                                 });
                             }
                         }, 100);

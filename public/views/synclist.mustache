@@ -1,5 +1,5 @@
 <link rel="stylesheet" type="text/css" href="css/sync.css">
-<h1>sync list (debug)</h1>
+<h1>sync list (debug) <a href="#" class="right">home</a></h1>
 <div class="page">
     <table class="center">
         <thead>
@@ -7,16 +7,19 @@
                 <th>sid</th>
                 <th>lastSync</th>
                 <th>remoteIp</th>
-                <th>action</th>
+                <th>status</th>
+                <th colspan="2">action</th>
             </tr>
         </thead>
         <tbody>
             {{#syncitems}}
             <tr>
                 <td>{{sid}}</td>
-                <td>{{lastSync}}</td>
+                <td data-format="datetime">{{lastSync}}</td>
                 <td>{{remoteIp}}</td>
+                <td data-format="status">{{status}}</td>
                 <td><a href="#" data-action="sync" data-sid="{{sid}}">sync</a></td>
+                <td><a href="#" data-action="expire" data-sid="{{sid}}">expire</a></td>
             </tr>
             {{/syncitems}}
         </tbody>

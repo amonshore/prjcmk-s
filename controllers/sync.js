@@ -1,5 +1,6 @@
 "use strict";
 const db = require('./db'),
+    _ = require('lodash'),
     conf = require('../conf.json'),
     express = require('express'),
     router = express.Router();
@@ -82,6 +83,24 @@ router.get('/check/:sid', (req, res) => {
         });
 });
 
+/**
+ * Applica delle modifiche al record di sincronizzazione.
+ * Usare a solo scopo di debug.
+ */
+router.post('/change/:sid', (req, res) => {
+    db.Sync.findOne({ "sid": req.params.sid })
+        .then(doc => {
+            return doc.update(req.body).exec();            
+        })
+        .then(doc => { //e' la risposta di update {ok: 1, nModified: 1, n: 1}
+            res.json(doc);
+        })
+        .catch(err => {
+            db.utils.err(err);
+            res.status(500).send(db.utils.parseError(err).descr);
+        });    
+});
+
 // NB: attenzione, mantenere sotto /check/:sid altrimenti 
 //  quest'ultime verranno interpretate come /:sid(check)/:time(sid)
 
@@ -125,7 +144,7 @@ router.post('/:sid', (req, res) => {
                 const now = Date.now();
                 if (doc.lastSync + conf.sync.syncIdTimeout > now) {
                     doc.update({ "lastSync": now, "status": db.Sync.SYNCED }).exec();
-                    res.send('sync ok');
+                    res.json(_.pick(doc, ['sid', 'lastSync']));
                 } else {
                     removeSyncData(req.params.sid);
                     res.status(403).send('sync expired');
