@@ -1,6 +1,7 @@
 "use strict";
 const db = require('./db'),
     _ = require('lodash'),
+    fs = require('fs'),
     conf = require('../conf.json'),
     express = require('express'),
     router = express.Router();
@@ -90,7 +91,7 @@ router.get('/check/:sid', (req, res) => {
 router.post('/change/:sid', (req, res) => {
     db.Sync.findOne({ "sid": req.params.sid })
         .then(doc => {
-            return doc.update(req.body).exec();            
+            return doc.update(req.body).exec();
         })
         .then(doc => { //e' la risposta di update {ok: 1, nModified: 1, n: 1}
             res.json(doc);
@@ -98,7 +99,7 @@ router.post('/change/:sid', (req, res) => {
         .catch(err => {
             db.utils.err(err);
             res.status(500).send(db.utils.parseError(err).descr);
-        });    
+        });
 });
 
 // NB: attenzione, mantenere sotto /check/:sid altrimenti 
@@ -119,15 +120,90 @@ router.get('/:sid/:time', (req, res) => {
  * Invio al server dei comics con relative uscite.
  * Se time è 0 tutti i dati presenti nel db relativi al sid devono essere eliminati 
  * e sostituiti con quelli appena ricevuti.
+ * Se tutto va bene ritorna {sid, lastSync}
  * 
  * @param      {string} sid codice di sincronizzazione
  * @param      {number} time timestamp di riferimento
  */
 router.post('/:sid/:time', (req, res) => {
-    // TODO: con time a 0 aggiornare anche Sync.status
-    //  { "comics": [ { "cid": 999, "action": action } ], "releases": [] }
-    //  action -> add, upd, del, clear
-    res.status(503).send('Service Unavailable');
+    if (conf.debug) {
+        console.log(' - received ' + (+req.get('content-length') / 1024).toFixed(2) + ' KB');
+        fs.open('./sync.log', 'w', (err, fd) => {
+            if (err) {
+                console.error(err);
+            } else {
+                fs.write(fd, JSON.stringify(req.body, null, 2), (err) => {
+                    err && console.error(err);
+                });
+            }
+        })
+    }
+
+    if (+req.params.time === 0) {
+        //pulisco tutte le tabelle con il sid corrente
+        db.Release.remove({ "sid": req.params.sid }).exec()
+            .then(() => db.Comic.remove({ "sid": req.params.sid }).exec())
+            //inserisco tutti i dati ricevuti
+            .then(() => {
+                return db.Comic.insertMany(
+                        req.body.comics.map(comics => {
+                            return {
+                                "cid": comics.id,
+                                "name": comics.name,
+                                "series": comics.series,
+                                "publisher": comics.publisher,
+                                "authors": comics.authors,
+                                "price": comics.price,
+                                "periodicity": comics.periodicity,
+                                "reserved": comics.reserved,
+                                "notes": comics.notes,
+                                //"image": comics.image,
+                                //"categories": comics.categories,
+                                "sid": req.params.sid
+                            }
+                        }))
+                    .then(docs => {
+                        console.log(' -', docs.length, 'comics added for sid ', req.params.sid);
+                    });
+            })
+            .then(() => {
+                return db.Release.insertMany(
+                        req.body.comics.reduce((p, comics) => {
+                            return p.concat(comics.releases.map(release => {
+                                return {
+                                    "relid": comics.id + '_' + release.number,
+                                    "cid": comics.id,
+                                    "number": release.number,
+                                    "date": release.date,
+                                    "price": release.price,
+                                    "ordered": release.ordered === 'T',
+                                    "purchased": release.purchased === 'T',
+                                    "notes": release.notes,
+                                    "sid": req.params.sid
+                                }
+                            }));
+                        }, []))
+                    .then(docs => {
+                        console.log(' -', docs.length, 'releases added for sid ', req.params.sid);
+                    });
+            })
+            //aggiorno lo stato del sid
+            .then(() => {
+                console.log(' - update sync status');
+                return db.Sync.findOneAndUpdate({ "sid": req.params.sid }, { "lastSync": Date.now(), "status": db.Sync.DATA_RECEIVED })
+                    .exec().then(doc => {
+                        res.json(_.pick(doc, ['sid', 'lastSync']));
+                    })
+            })
+            .catch((err) => {
+                console.log(' - catch');
+                db.utils.err(err);
+                res.status(500).send(db.utils.parseError(err).descr);
+            });
+    } else {
+        // TODO solo aggiornamento
+        res.status(503).send('Service Unavailable');
+    }
 });
 
 /**

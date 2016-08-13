@@ -24,7 +24,8 @@
                 $.get('/sync/check/' + sid)
                     .then(data => {
                         if (data.synced) {
-                            // TODO: caricare prossima pagina
+                            // carico la pagina per l'editing dei dati
+                            document.location.href = '#sync/comics/' + sid;
                         } else if (!--times) {
                             $qrcode.hide();
                             $('#btnNewCode', context).show()

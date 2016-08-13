@@ -9,12 +9,13 @@ const chalk = require('chalk'),
 //
 mongoose.Promise = Q.Promise;
 // schema
+// NB: Comic.sid e Release.relid non sono più chiave primarie, 
+//  perché possono essere presenti più record con lo stesso cid/relid ma per diversi sid
 const Comic = mongoose.model('Comic', new Schema({
     cid: {
         type: String,
-        index: {
-            unique: true
-        }
+        required: true,
+        index: true
     },
     name: {
         type: String,
@@ -37,9 +38,7 @@ const Comic = mongoose.model('Comic', new Schema({
 const Release = mongoose.model('Release', new Schema({
     relid: { // combinazione di cid e number
         type: String,
-        index: {
-            unique: true
-        }
+        required: true
     },
     cid: String,
     number: Number,
@@ -127,8 +126,13 @@ function init() {
         })
         .then(Sync.remove().then(() => {
             console.log(' - sync cleared');
+        }))
+        .then(Comic.remove({ "sid": { "$exists": true } }).then(() => {
+           console.log(' - comics (with sid) cleared'); 
+        }))
+        .then(Release.remove({ "sid": { "$exists": true } }).then(() => {
+           console.log(' - releases (with sid) cleared'); 
         }));
-        // TODO: pulire le altre tabelle usate da sync
 }
 
 exports.init = init;

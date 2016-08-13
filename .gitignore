@@ -3,6 +3,6 @@
 data/
 node_modules/
 bower_components/
-out.log
+*.log
 conf.json
 gulpconf.json

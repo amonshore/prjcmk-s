@@ -94,7 +94,8 @@
             var hnd = setInterval(function () {
                 $.get('/sync/check/' + sid).then(function (data) {
                     if (data.synced) {
-                        // TODO: caricare prossima pagina
+                        // carico la pagina per l'editing dei dati
+                        document.location.href = '#sync/comics/' + sid;
                     } else if (! --times) {
                         $qrcode.hide();
                         $('#btnNewCode', context).show();
