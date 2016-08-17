@@ -8,6 +8,7 @@ const gulp = require('gulp'),
     ftp = require('gulp-ftp'),
     sourcemaps = require('gulp-sourcemaps'),
     uglify = require('gulp-uglify'),
+    cleanCSS = require('gulp-clean-css'),
     rename = require('gulp-rename'),
     concat = require('gulp-concat'),
     conf = require('./gulpconf.json');
@@ -87,12 +88,6 @@ gulp.task('watch:css', () => {
  * Se un file JS viene modificato, rilancia make:js
  */
 gulp.task('watch:js', () => {
-    // return watch('src/**/*.js', { ignoreInitial: false })
-    //     .pipe(debug({ title: 'changed:' }))
-    //     .pipe(plumber())
-    //     .pipe(babel())
-    //     .on('error', console.error.bind(console))
-    //     .pipe(gulp.dest('public'));
     return gulp.watch('src/**/*.js', ['make:js'])
         .on('change', e => {
             gutil.log('changed:', gutil.colors.blue(e.path.split('/').pop()));
@@ -122,6 +117,27 @@ gulp.task('make:js', () => {
 });
 
 /**
+ * Concatena tutti i file CSS, minifica e copia nella cartella pubblica.
+ * Viene copiata anche la mappa del file.
+ */
+gulp.task('make:css', () => {
+    // default.css deve essere il primo file a essere elaborato
+    return gulp.src(['src/css/default.css', 'src/**/*.css'])
+        // evita che un errore blocchi l'intero processo
+        .pipe(plumber())
+        .pipe(sourcemaps.init({ loadMaps: true }))
+        // concatena i file e copia il risultato
+        .pipe(concat('all.css'))
+        .pipe(gulp.dest('public/css'))
+        // minifica il file e copia
+        .pipe(cleanCSS())
+        .pipe(rename('all.min.css'))
+        // scrive la mappa 
+        .pipe(sourcemaps.write('.'))
+        .pipe(gulp.dest('public/css'));
+});
+
+/**
  * Invia i file al server via FTP.
  */
 gulp.task('publish', () => {
@@ -130,6 +146,6 @@ gulp.task('publish', () => {
         .pipe(gutil.noop());
 });
 
-gulp.task('watch', ['watch:html', 'watch:css', 'watch:js', 'make:js']);
+gulp.task('watch', ['watch:html', 'watch:css', 'make:css', 'watch:js', 'make:js']);
 gulp.task('prepare', ['prepare:js', 'prepare:css']);
 gulp.task('clean', ['clean:js', 'clean:css', 'clean:html']);

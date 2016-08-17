@@ -1,0 +1,257 @@
+body {
+    font-size: 14px;
+    font-family: 'Open Sans', sans-serif;
+    background-color: #fafafa;
+    color: #444;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.clear {
+    clear: both;
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
+.center {
+    width: 400px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+button,
+.button {
+    background-color: #2196F3;
+    color: #fff;
+    border-radius: 2px;
+    border: none;
+    padding: .5em .7em;
+    margin: .19em;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .26);
+    cursor: pointer;
+}
+
+button:active,
+.button:active {
+    box-shadow: none;
+}
+
+button.success,
+.button.success {
+    background-color: #8BC34A;
+}
+
+button.danger,
+.button.danger {
+    background-color: #F44336;
+}
+
+h1>button,
+h1>.button {
+    font-size: 1rem;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table>thead>tr>th {
+    border: 1px solid #DEDEDE;
+    font-weight: 400;
+    padding: 5px;
+    font-size: 1.1em;
+    background-color: #00bcd4;
+    color: #FFF;
+}
+
+table>tbody>tr>td {
+    border: 1px solid #DDD;
+    margin: 0;
+    padding: 5px;
+    font-size: 1em;
+    -webkit-transition: background-color .4s ease;
+}
+
+table>tbody>tr:hover>td {
+    background-color: #FFE082;
+    color: #333;
+}
+
+table>thead>tr>th:first-child,
+table>tbody>tr>td:first-child {
+    border-left-style: none;
+}
+
+table>thead>tr>th:last-child,
+table>tbody>tr>td:last-child {
+    border-right-style: none;
+}
+
+.page-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 90px;
+    padding: 10px;
+    background-color: #03a9f4;
+    color: #ffffff;
+    z-index: 2;
+}
+
+.page-header>h1 {
+    font-size: 3em;
+    margin: 0.37em 0;
+    text-shadow: 1px 1px 6px #607D8B;    
+}
+
+.page-body {}
+
+.page-body>h1 {
+    box-shadow: 0px 2px 6px rgba(51, 51, 51, 0.5);
+    position: fixed;
+    top: 90px;
+    width: 100%;
+    height: 39px;
+    margin-top: 0;
+    padding: 10px;
+    background-color: #03a9f4;
+    color: #ffffff;
+    font-size: 1.2em;
+    z-index: 1;
+}
+
+.page-body>h1>a {
+    text-decoration: none;
+    color: #3F51B5;
+    font-size: .85em;
+    padding-top: 6px;
+}
+
+.page-body>h1>a:hover {
+    color: #FFEB3B;
+}
+
+.page-body>.page {
+    margin-top: 140px;
+}
+
+.page-body>.page.with-searchbox {
+    margin-top: 180px;
+}
+
+.searchbox {
+    box-shadow: 0px 2px 6px rgba(51, 51, 51, 0.5);
+    position: fixed;
+    z-index: 2;
+    top: 129px;
+    width: 100%;
+    height: 40px;
+    padding: 5px 0;
+    background-color: #ffffff;
+    border-bottom: solid 1px #ddd;
+}
+
+.searchbox>.material-icons {
+    float: left;
+    padding-top: 7px;
+    padding-left: 6px;
+}
+
+.searchbox>input {
+    font-size: 1.4em;
+    width: 94%;
+    outline: none;
+    border: none;
+    height: 27px;
+    float: left;
+    padding-left: 7px;
+}
+
+
+/* Rules for sizing the icon. */
+
+.material-icons.md-18 {
+    font-size: 18px;
+}
+
+.material-icons.md-24 {
+    font-size: 24px;
+}
+
+.material-icons.md-36 {
+    font-size: 36px;
+}
+
+.material-icons.md-48 {
+    font-size: 48px;
+}
+
+
+/* Rules for using icons as black on a light background. */
+
+.material-icons.md-dark {
+    color: rgba(0, 0, 0, 0.54);
+}
+
+.material-icons.md-dark.md-inactive {
+    color: rgba(0, 0, 0, 0.26);
+}
+
+
+/* Rules for using icons as white on a dark background. */
+
+.material-icons.md-light {
+    color: rgba(255, 255, 255, 1);
+}
+
+.material-icons.md-light.md-inactive {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.process-list {
+	margin: 0 auto;
+}
+
+.synccomics .comics-list {}
+
+.synccomics .comics-list .comics {
+    display: inline-block;
+    float: left;
+    width: 240px;
+    height: 100px;
+    background-color: #CDDC39;
+    border: solid 1px #607D8B;
+    border-radius: 4px;
+    margin: 5px;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.synccomics .comics-list .comics:hover {
+    box-shadow: 2px 2px 4px #444;
+}
+
+.synccomics .comics-list .comics>.name {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.synccomics .comics-list .comics>.publisher {
+    color: #795548;
+}
+
+.synccomics .comics-list .comics>.authors {
+    color: #af8779;
+    font-size: .85em;
+}
