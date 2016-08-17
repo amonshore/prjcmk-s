@@ -1,5 +1,6 @@
 ($ => {
     const INTERVAL = 2000;
+    let hnd;
 
     window.JSVIEW['sync'] = {
         ready: (context) => {
@@ -20,7 +21,7 @@
             });
             // controllo se e' avventua una richiesta del sid dall'app
             // scaduto il tempo nascondo il qrcode e mostro pulsante per refresh pagina
-            const hnd = setInterval(() => {
+            hnd = setInterval(() => {
                 $.get('/sync/check/' + sid)
                     .then(data => {
                         if (data.synced) {
@@ -39,6 +40,9 @@
                         });
                     });
             }, INTERVAL);
+        },
+        destroy: (context) => {
+            clearInterval(hnd);
         }
     }
 })(jQuery);

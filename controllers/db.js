@@ -111,6 +111,14 @@ const utils = {
      */
     parseError: function(err) {
         return { "code": err.code, "descr": this.errors[err.code] || "Generic error" };
+    },
+    /**
+     * Drop database in uso.
+     *
+     * @return     {Object}  Promise
+     */
+    dropDatabase: function() {
+        return mongoose.connection.db.dropDatabase();
     }
 };
 

@@ -6,10 +6,12 @@
                 e.preventDefault();
 
                 const action = e.target.attributes['data-action'].value;
+                const title = e.target.attributes['data-confirm-title'].value;
+                const message = e.target.attributes['data-confirm-message'].value;
 
                 swal({
-                        title: action.capitalize() + ' current process?',
-                        text: 'This may take a few seconds.',
+                        title: title,
+                        text: message,
                         showCancelButton: true
                     },
                     confirm => {

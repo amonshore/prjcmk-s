@@ -1,7 +1,8 @@
 <link rel="stylesheet" type="text/css" href="css/remote.css">
 
-<h1>remote :: {{pid}}</h1>
-<div class="page">
-    <button class="danger" data-action="stop">Stop</button>
-    <button data-action="restart">Restart</button>
+<h1>remote :: pid {{pid}}</h1>
+<div class="page" data-page-id="remote">
+    <button class="danger" data-action="dropdatabase" data-confirm-title="Drop current database?" data-confirm-message="Restart app after you drop the database.">Drop database</button>
+    <!-- <button class="danger" data-action="stop">Stop</button> -->
+    <button data-action="restart" data-confirm-title="Restart application?" data-confirm-message="This may take a few seconds.">Restart app</button>
 </div>

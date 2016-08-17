@@ -7,7 +7,7 @@
         '2': 'DATA_RECEIVED'
     }
 
-    window.JSVIEW['sync/list'] = {
+    window.JSVIEW['synclist'] = {
         ready: (context) => {
             $('[data-format]', context).each((index, el) => {
                 el.innerHTML = fomratters[el.attributes['data-format'].value](el.innerText);
@@ -40,6 +40,12 @@
                                     }).fail((jqXHR, textStatus, errorThrown) => {
                                         swal({ title: 'Expire', text: textStatus + ': ' + errorThrown, type: 'error' });
                                     });
+                                } else if (action === 'remove') {
+                                    $.post('/sync/remove/' + sid).then(() => {
+                                        location.reload();
+                                    }).fail((jqXHR, textStatus, errorThrown) => {
+                                        swal({ title: 'Remove', text: textStatus + ': ' + errorThrown, type: 'error' });
+                                    });                                    
                                 }
                             }, 100);
                         }

@@ -2,6 +2,7 @@
 const forever = require('forever'),
     spawn = require('child_process').spawn,
     process = require('process'),
+    db = require('./db'),
     express = require('express'),
     router = express.Router();
 
@@ -83,6 +84,20 @@ router.get('/restart', (req, res) => {
     console.log('*** forevere restart', pid);
     spawn('forever', ['restart', pid]);
     res.status(200).send('ok');
+});
+
+/**
+ * Drop database
+ */
+router.get('/dropdatabase', (req, res) => {
+    db.utils.dropDatabase()
+        .then(() => {
+            res.status(200).send('ok');
+        })
+        .catch(err => {
+            db.utils.err(err);
+            res.status(500).send(db.utils.parseError(err).descr);
+        });
 });
 
 /**

@@ -30,7 +30,9 @@ function ip2long(ip) {
  */
 function removeSyncData(sid) {
     //TODO: rimuovere i dati anche dalle altre tabelle
-    return db.Sync.remove({ "sid": sid }).exec();
+    return db.Comic.remove({ "sid": sid })
+        .then(() => db.Release.remove({ "sid": sid }))
+        .then(() => db.Sync.remove({ "sid": sid }));
 }
 
 /**
@@ -59,7 +61,7 @@ function newSid(req, res, next) {
  * Restituisce la pagina "synclist" renderizzata con il contenuto di Sync.
  */
 router.get('/list', (req, res) => {
-    db.Sync.find({})
+    db.Sync.find({}).sort({ "lastSync": -1 })
         .then(docs => { res.render('synclist.mustache', { "syncitems": docs }) })
         .catch(err => {
             db.utils.err(err);
@@ -68,7 +70,27 @@ router.get('/list', (req, res) => {
 });
 
 /**
- * Controlla che il sid e' stato richiesto.
+ * Restituisce la pagina "synccomics" renderizzata con i comcis ordinati per nome.
+ */
+router.get('/comics/:sid', (req, res) => {
+    db.Comic.find({ "sid": req.params.sid }).sort({ "name": "asc" })
+        .then(docs => {
+            res.render('synccomics.mustache', {
+                "sid": req.params.sid,
+                "comics": docs,
+                "search": function() { //stringa da usare per la ricerca
+                    return [this.name, this.publisher, this.authors].join('|').toUpperCase();
+                }
+            })
+        })
+        .catch(err => {
+            db.utils.err(err);
+            res.status(500).send(db.utils.parseError(err).descr);
+        });
+});
+
+/**
+ * Controlla se il sid e' stato richiesto.
  */
 router.get('/check/:sid', (req, res) => {
     db.Sync.findOne({ "sid": req.params.sid })
@@ -102,8 +124,24 @@ router.post('/change/:sid', (req, res) => {
         });
 });
 
+
+/**
+ * Rimuove tutti i dati legati a un sid.
+ */
+router.post('/remove/:sid', (req, res) => {
+    removeSyncData(req.params.sid)
+        .then(() => {
+            res.json({ "sid": req.params.sid });
+        })
+        .catch(err => {
+            db.utils.err(err);
+            res.status(500).send(db.utils.parseError(err).descr);
+        });
+});
+
 // NB: attenzione, mantenere sotto /check/:sid altrimenti 
 //  quest'ultime verranno interpretate come /:sid(check)/:time(sid)
+//  ************************************************************************************
 
 /**
  * Recupera gli aggiornamenti relativi a sid e con timestamp superiore a time.
@@ -112,8 +150,9 @@ router.post('/change/:sid', (req, res) => {
  * @param      {number} time timestamp degli ultimi aggiornamenti
  */
 router.get('/:sid/:time', (req, res) => {
-    // TODO: sync da fare
-    res.status(503).send('Service Unavailable');
+    // TODO: sync da fare (se DEBUG salvare in un file i dati inviati)
+    //res.status(503).send('Service Unavailable');
+    res.json({ "sid": req.params.sid, "data": [] });
 });
 
 /**

@@ -1,0 +1,35 @@
+.synccomics .comics-list {}
+
+.synccomics .comics-list .comics {
+    display: inline-block;
+    float: left;
+    width: 240px;
+    height: 100px;
+    background-color: #CDDC39;
+    border: solid 1px #607D8B;
+    border-radius: 4px;
+    margin: 5px;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.synccomics .comics-list .comics:hover {
+    box-shadow: 2px 2px 4px #444;
+}
+
+.synccomics .comics-list .comics>.name {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.synccomics .comics-list .comics>.publisher {
+    color: #795548;
+}
+
+.synccomics .comics-list .comics>.authors {
+    color: #af8779;
+    font-size: .85em;
+}

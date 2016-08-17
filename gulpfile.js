@@ -18,7 +18,8 @@ const jsLibs = [
     'bower_components/rxjs/dist/rx.lite.js',
     'bower_components/sweetalert/dist/sweetalert.min.js',
     'bower_components/jquery-qrcode/jquery.qrcode.min.js',
-    'bower_components/moment/min/moment-with-locales.min.js'
+    'bower_components/moment/min/moment-with-locales.min.js',
+    'bower_components/underscore/underscore-min.js'
 ];
 const cssLibs = [
     'bower_components/normalize-css/normalize.css',
