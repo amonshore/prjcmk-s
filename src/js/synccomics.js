@@ -1,7 +1,7 @@
 ($ => {
     window.JSVIEW['synccomics'] = {
         ready: (context) => {
-        	// registro l'evento perla ricerca
+        	// registro l'evento per la ricerca
             context.on('searchbox:search', (event, term) => {
             	if (term) {
 					const arrTerms = term.split(/\s/);

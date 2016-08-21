@@ -9,7 +9,8 @@ const chalk = require('chalk'),
     bodyParser = require('body-parser'),
     express = require('express'),
     mustacheExpress = require('mustache-express'),
-    app = express();
+    app = express(),
+    expressWs = require('express-ws')(app);
 // var options = {
 //     root: __dirname + '/public/',
 //     dotfiles: 'deny',
@@ -39,8 +40,14 @@ app.use(bodyParser.urlencoded({
 }));
 // file statici
 app.use('/', express.static(__dirname + '/public'));
+// test
 app.get('/hello', (req, res) => {
     res.status(200).json({ "message": "Hello dear, this is version 1 of prjcmk-s" });
+});
+app.ws('/echo', (ws, res) => {
+    ws.on('message', (msg) => {
+        ws.send(msg);
+    });
 });
 // routing
 app.use('/comics', require('./controllers/comics_v1'));

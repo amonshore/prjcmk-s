@@ -58,6 +58,50 @@ function newSid(req, res, next) {
 }
 
 /**
+ * Gestione della comunicazione con la pagina web tramite websocket.
+ * Il messaggio verrà elaborato in base alla proprietà "type":
+ * - check: controlla se il sid e' stato richiesto
+ * - news: controlla se i dati sono cambiati per il sid da un certo momento in poi
+ * 
+ * NB: nella risposta includere sempre il tipo del messaggio
+ */
+router.ws('/wsh', (ws, res) => {
+    ws.on('message', (msg) => {
+        const data = JSON.parse(msg);
+        if (data.type === 'check') {
+            db.Sync.findOne({ "sid": data.sid })
+                .then(doc => {
+                    ws.send(JSON.stringify({
+                        "type": "check",
+                        "sid": data.sid,
+                        "synced": (!!doc && doc.status === db.Sync.DATA_RECEIVED)
+                    }));
+                })
+                .catch(err => {
+                    db.utils.err(err);
+                    ws.send(JSON.stringify({ "error": 500, "descr": db.utils.parseError(err).descr }))
+                });
+        } else if (data.type === 'news') {
+            db.Sync.count({ "sid": data.sid, "syncTime": { "$gt": data.time } })
+                .then(count => {
+                    console.log('ws sync news', count);
+                    ws.send(JSON.stringify({
+                        "type": "news",
+                        "sid": data.sid,
+                        "news": count > 0
+                    }));
+                })
+                .catch(err => {
+                    db.utils.err(err);
+                    ws.send(JSON.stringify({ "error": 500, "descr": db.utils.parseError(err).descr }))
+                });
+        } else {
+            ws.send(JSON.stringify({ "error": 500, "descr": "Invalid message type: " + data.type }));
+        }
+    });
+});
+
+/**
  * Restituisce la pagina "synclist" renderizzata con il contenuto di Sync.
  */
 router.get('/list', (req, res) => {
@@ -139,10 +183,6 @@ router.post('/remove/:sid', (req, res) => {
         });
 });
 
-// NB: attenzione, mantenere sotto /check/:sid altrimenti 
-//  quest'ultime verranno interpretate come /:sid(check)/:time(sid)
-//  ************************************************************************************
-
 /**
  * Recupera gli aggiornamenti relativi a sid e con timestamp superiore a time.
  * 
@@ -198,7 +238,9 @@ router.post('/:sid/:time', (req, res) => {
                                 "notes": comics.notes,
                                 //"image": comics.image,
                                 //"categories": comics.categories,
-                                "sid": req.params.sid
+                                "sid": req.params.sid,
+                                "syncTime": 0,
+                                "syncStatus": db.Sync.DATA_RECEIVED
                             }
                         }))
                     .then(docs => {
@@ -218,7 +260,9 @@ router.post('/:sid/:time', (req, res) => {
                                     "ordered": release.ordered === 'T',
                                     "purchased": release.purchased === 'T',
                                     "notes": release.notes,
-                                    "sid": req.params.sid
+                                    "sid": req.params.sid,
+                                    "syncTime": 0,
+                                    "syncStatus": db.Sync.DATA_RECEIVED
                                 }
                             }));
                         }, []))

@@ -126,7 +126,8 @@
 
 (function ($) {
     var INTERVAL = 2000;
-    var hnd = void 0;
+    var hnd = void 0,
+        socket = void 0;
 
     window.JSVIEW['sync'] = {
         ready: function ready(context) {
@@ -144,28 +145,36 @@
             $('#btnNewCode', context).click(function (e) {
                 document.location.reload();
             });
+            // creo un web socket per controllare lo stato del sid
+            socket = new WebSocket('ws://localhost:3000/sync/wsh');
+            // socket.onopen = (event) => {
+            //     console.log(event);
+            // };
+            socket.onerror = function (error) {
+                console.log(error);
+            };
+            socket.onmessage = function (event) {
+                var data = JSON.parse(event.data);
+                if (data.synced) {
+                    // carico la pagina per l'editing dei dati
+                    document.location.href = '#sync/comics/' + sid;
+                } else if (! --times) {
+                    $qrcode.hide();
+                    $('#btnNewCode', context).show();
+                    clearInterval(hnd);
+                    socket.close();
+                }
+            };
             // controllo se e' avventua una richiesta del sid dall'app
             // scaduto il tempo nascondo il qrcode e mostro pulsante per refresh pagina
             hnd = setInterval(function () {
-                $.get('/sync/check/' + sid).then(function (data) {
-                    if (data.synced) {
-                        // carico la pagina per l'editing dei dati
-                        document.location.href = '#sync/comics/' + sid;
-                    } else if (! --times) {
-                        $qrcode.hide();
-                        $('#btnNewCode', context).show();
-                        clearInterval(hnd);
-                    }
-                }).fail(function (jqXHR, textStatus, errorThrown) {
-                    clearInterval(hnd);
-                    swal({ title: 'Sync', text: textStatus + ': ' + errorThrown, type: 'error' }, function () {
-                        document.location.reload();
-                    });
-                });
+                // la risposta viene controllata nell'evento "onmessage"
+                socket.send(JSON.stringify({ "type": "check", "sid": sid }));
             }, INTERVAL);
         },
         destroy: function destroy(context) {
             clearInterval(hnd);
+            socket.close();
         }
     };
 })(jQuery);
@@ -206,7 +215,7 @@
         },
         '0': 'NO_SYNC',
         '1': 'SYNCED',
-        '2': 'DATA_RECEIVED'
+        '3': 'DATA_RECEIVED'
     };
 
     window.JSVIEW['synclist'] = {

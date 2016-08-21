@@ -33,7 +33,9 @@ const Comic = mongoose.model('Comic', new Schema({
     sid: {
         type: String,
         index: true
-    }
+    },
+    syncTime: Number,
+    syncStatus: Number
 }));
 const Release = mongoose.model('Release', new Schema({
     relid: { // combinazione di cid e number
@@ -49,7 +51,9 @@ const Release = mongoose.model('Release', new Schema({
     sid: {
         type: String,
         index: true
-    }
+    },
+    syncTime: Number,
+    syncStatus: Number
 }));
 const Category = mongoose.model('Category', new Schema({
     catid: {
@@ -73,9 +77,12 @@ const Sync = mongoose.model('Sync', new Schema({
     // stato 0: sid non ancora richiesto, 1: sid richiesto, 2: primi dati da app ricevuti
     status: Number
 }));
-Sync.NO_SYNC = 0;
-Sync.SYNCED = 1;
-Sync.DATA_RECEIVED = 2;
+Sync.NO_SYNC        = 0b00000000;
+Sync.SYNCED         = 0b00000001;
+Sync.DATA_RECEIVED  = 0b00000011;
+Sync.DATA_ADDED     = 0b00000101;
+Sync.DATA_UPDATED   = 0b00001001;
+Sync.DATA_REMOVED   = 0b00010001;
 
 Comic.on('index', function(err) {
     if (err) console.error(err);

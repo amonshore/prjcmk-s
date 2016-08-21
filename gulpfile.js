@@ -67,6 +67,13 @@ gulp.task('clean:html', () => {
 });
 
 /**
+ * Pulisce la cartella pubblica realtiva ai file immagine.
+ */
+gulp.task('clean:img', () => {
+    return del(['public/**/*.png', 'public/**/*.jpg', 'public/**/*.bmp']);
+});
+
+/**
  * Se un file HTML viene modificato lo capia nella corretta cartella pubblica.
  */
 gulp.task('watch:html', () => {
@@ -76,12 +83,25 @@ gulp.task('watch:html', () => {
 });
 
 /**
+ * Se un file immagine viene modificato lo capia nella corretta cartella pubblica.
+ */
+gulp.task('watch:img', () => {
+    return watch(['src/**/*.png', 'src/**/*.jpg', 'src/**/*.bmp'], { ignoreInitial: false })
+        .pipe(debug({ title: 'changed:' }))
+        .pipe(gulp.dest('public'));
+});
+
+/**
  * Se un file CSS viene modificato lo capia nella corretta cartella pubblica.
  */
 gulp.task('watch:css', () => {
-    return watch('src/**/*.css', { ignoreInitial: false })
-        .pipe(debug({ title: 'changed:' }))
-        .pipe(gulp.dest('public'));
+    // return watch('src/**/*.css', { ignoreInitial: false })
+    //     .pipe(debug({ title: 'changed:' }))
+    //     .pipe(gulp.dest('public'));
+    return gulp.watch('src/**/*.css', ['make:css'])
+        .on('change', e => {
+            gutil.log('changed:', gutil.colors.blue(e.path.split('/').pop()));
+        });
 });
 
 /**
@@ -146,6 +166,6 @@ gulp.task('publish', () => {
         .pipe(gutil.noop());
 });
 
-gulp.task('watch', ['watch:html', 'watch:css', 'make:css', 'watch:js', 'make:js']);
+gulp.task('watch', ['watch:html', 'watch:css', 'make:css', 'watch:js', 'make:js', 'watch:img']);
 gulp.task('prepare', ['prepare:js', 'prepare:css']);
-gulp.task('clean', ['clean:js', 'clean:css', 'clean:html']);
+gulp.task('clean', ['clean:js', 'clean:css', 'clean:html', 'clean:img']);

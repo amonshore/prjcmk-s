@@ -4,7 +4,7 @@
         'status': value => fomratters[value] || value,
         '0': 'NO_SYNC',
         '1': 'SYNCED',
-        '2': 'DATA_RECEIVED'
+        '3': 'DATA_RECEIVED'
     }
 
     window.JSVIEW['synclist'] = {
