@@ -4,7 +4,9 @@
   "description": "prjcmk web app",
   "main": "app.js",
   "scripts": {
-    "test": "node app.js"
+    "prestart": "rm -f out.log err.log && echo startserver > launcher.src",
+    "start": "forever start -o out.log -e err.log launcher.js ",
+    "test": "npm app.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +21,7 @@
   "dependencies": {
     "body-parser": "^1.14.2",
     "chalk": "^1.1.1",
+    "chokidar": "^1.6.0",
     "dateformat": "^1.0.12",
     "express": "^4.13.4",
     "express-ws": "^2.0.0",
