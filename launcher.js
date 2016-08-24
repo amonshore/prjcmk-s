@@ -65,6 +65,7 @@ function onparse(filename) {
 function onexit() {
     if (prapp) {
         prapp.kill('SIGTERM');
+        prapp = null;
     }
 }
 
@@ -76,6 +77,7 @@ chokidar.watch('launcher.src')
 // rilascio le risorse quando questo processo viene chiuso
 // TODO: non funziona o funziona male: la porta TCP aperta da app.js rimane in uso
 process
+    .on('close', onexit)
     .on('exit', onexit)
     .on('stop', onexit)
     .on('SIGINT', onexit)

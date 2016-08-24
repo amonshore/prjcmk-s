@@ -5,6 +5,10 @@ const db = require('./db'),
     conf = require('../conf.json'),
     express = require('express'),
     router = express.Router();
+// ogni attività di sincronizzazione avrà la sua entry in questo oggetto dove la chiave è il sid
+const sidconns = {
+    // <sid>: <object> 
+};
 
 /**
  * Converte una stringa IP nel corrispettivo numerico.
@@ -29,6 +33,7 @@ function ip2long(ip) {
  * @return     {promise}  una promessa
  */
 function removeSyncData(sid) {
+    //TODO: rimuovere entry da sidconns (e chiudere il socket?)
     //TODO: rimuovere i dati anche dalle altre tabelle
     return db.Comic.remove({ "sid": sid })
         .then(() => db.Release.remove({ "sid": sid }))
@@ -58,46 +63,38 @@ function newSid(req, res, next) {
 }
 
 /**
- * Gestione della comunicazione con la pagina web tramite websocket.
- * Il messaggio verrà elaborato in base alla proprietà "type":
- * - check: controlla se il sid e' stato richiesto
- * - news: controlla se i dati sono cambiati per il sid da un certo momento in poi
- * 
- * NB: nella risposta includere sempre il tipo del messaggio
+ * Segnala che il la sincronizzazione è stata inizializzata.
+ *
+ * @param      {string}  sid     identificativo della sincronizzazione
  */
-router.ws('/wsh', (ws, res) => {
-    ws.on('message', (msg) => {
-        const data = JSON.parse(msg);
-        if (data.type === 'check') {
-            db.Sync.findOne({ "sid": data.sid })
-                .then(doc => {
-                    ws.send(JSON.stringify({
-                        "type": "check",
-                        "sid": data.sid,
-                        "synced": (!!doc && doc.status === db.Sync.DATA_RECEIVED)
-                    }));
-                })
-                .catch(err => {
-                    db.utils.err(err);
-                    ws.send(JSON.stringify({ "error": 500, "descr": db.utils.parseError(err).descr }))
-                });
-        } else if (data.type === 'news') {
-            db.Sync.count({ "sid": data.sid, "syncTime": { "$gt": data.time } })
-                .then(count => {
-                    console.log('ws sync news', count);
-                    ws.send(JSON.stringify({
-                        "type": "news",
-                        "sid": data.sid,
-                        "news": count > 0
-                    }));
-                })
-                .catch(err => {
-                    db.utils.err(err);
-                    ws.send(JSON.stringify({ "error": 500, "descr": db.utils.parseError(err).descr }))
-                });
-        } else {
-            ws.send(JSON.stringify({ "error": 500, "descr": "Invalid message type: " + data.type }));
-        }
+function signalSidApplied(sid) {
+    // segnalo alla pagina con cui sto comunicando via websocket che il sid è stato inviato dall'app
+    // restituire una promessa (vedi Q) in modo da gestire l'errore di sid non trovato
+    sidconns[sid].socket.send(JSON.stringify({
+        "sid": sid,
+        "synced": true
+    }));
+}
+
+/**
+ * Gestione della comunicazione con la pagina web tramite websocket.
+ */
+router.ws('/wsh/:sid', (ws, req) => {
+    // TODO creo oggetto per gestire il sid
+    //  questo oggetto deve scatenare un evento se non riceve segnali per un certo periodo di tempo
+    //  il primo segnale deve arrivare quando l'app invia i primi dati
+    const sid = req.params.sid;
+    sidconns[sid] = {
+        "sid": sid,
+        "time": Date.now(),
+        "socket": ws
+    };
+
+    ws.on('message', (msg) => { 
+        // TODO gestire i messaggi in arrivo (invio aggiornamenti dei dati effettuati dalla pagina)
+    });
+    ws.on('close', () => {
+        // TODO il socket è stato chiuso dalla pagina
     });
 });
 
@@ -277,6 +274,11 @@ router.post('/:sid/:time', (req, res) => {
                     .exec().then(doc => {
                         res.json(_.pick(doc, ['sid', 'lastSync']));
                     })
+            })
+            //segnalo che la sincronizzazione è stata accettata e i primi dati sono arrivati
+            .then(() => {
+                console.log(' - signal sync status');
+                signalSidApplied(req.params.sid);
             })
             .catch((err) => {
                 console.log(' - catch');

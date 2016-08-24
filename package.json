@@ -4,9 +4,7 @@
   "description": "prjcmk web app",
   "main": "app.js",
   "scripts": {
-    "prestart": "rm -f out.log err.log && echo startserver > launcher.src",
-    "start": "forever start -o out.log -e err.log launcher.js ",
-    "test": "npm app.js"
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
@@ -46,6 +44,7 @@
     "gulp-ftp": "^1.1.0",
     "gulp-plumber": "^1.1.0",
     "gulp-rename": "^1.2.2",
+    "gulp-sequence": "^0.4.5",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",

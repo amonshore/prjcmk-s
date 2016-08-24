@@ -146,7 +146,7 @@
                 document.location.reload();
             });
             // creo un web socket per controllare lo stato del sid
-            socket = new WebSocket('ws://localhost:3000/sync/wsh');
+            socket = new WebSocket('ws://' + location.host + '/sync/wsh/' + sid);
             // socket.onopen = (event) => {
             //     console.log(event);
             // };
@@ -165,12 +165,12 @@
                     socket.close();
                 }
             };
-            // controllo se e' avventua una richiesta del sid dall'app
-            // scaduto il tempo nascondo il qrcode e mostro pulsante per refresh pagina
-            hnd = setInterval(function () {
-                // la risposta viene controllata nell'evento "onmessage"
-                socket.send(JSON.stringify({ "type": "check", "sid": sid }));
-            }, INTERVAL);
+            // // controllo se e' avventua una richiesta del sid dall'app
+            // // scaduto il tempo nascondo il qrcode e mostro pulsante per refresh pagina
+            // hnd = setInterval(() => {
+            //     // la risposta viene controllata nell'evento "onmessage"
+            //     socket.send(JSON.stringify({ "type": "check", "sid": sid }));
+            // }, INTERVAL);
         },
         destroy: function destroy(context) {
             clearInterval(hnd);
@@ -183,7 +183,7 @@
 (function ($) {
     window.JSVIEW['synccomics'] = {
         ready: function ready(context) {
-            // registro l'evento perla ricerca
+            // registro l'evento per la ricerca
             context.on('searchbox:search', function (event, term) {
                 if (term) {
                     (function () {

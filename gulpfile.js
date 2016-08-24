@@ -1,7 +1,6 @@
 const gulp = require('gulp'),
     debug = require('gulp-debug'),
     watch = require('gulp-watch'),
-    del = require('del'),
     babel = require('gulp-babel'),
     plumber = require('gulp-plumber'),
     gutil = require('gulp-util'),
@@ -11,6 +10,8 @@ const gulp = require('gulp'),
     cleanCSS = require('gulp-clean-css'),
     rename = require('gulp-rename'),
     concat = require('gulp-concat'),
+    sequence = require('gulp-sequence'),
+    del = require('del'),
     conf = require('./gulpconf.json');
 
 const jsLibs = [
@@ -166,6 +167,8 @@ gulp.task('publish', () => {
         .pipe(gutil.noop());
 });
 
-gulp.task('watch', ['watch:html', 'watch:css', 'make:css', 'watch:js', 'make:js', 'watch:img']);
-gulp.task('prepare', ['prepare:js', 'prepare:css']);
 gulp.task('clean', ['clean:js', 'clean:css', 'clean:html', 'clean:img']);
+gulp.task('prepare', ['prepare:js', 'prepare:css']);
+gulp.task('watch', ['watch:html', 'watch:css', 'make:css', 'watch:js', 'make:js', 'watch:img']);
+
+gulp.task('default', sequence('clean', 'prepare', 'watch'));
