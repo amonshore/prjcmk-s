@@ -2,12 +2,17 @@
 const db = require('./db'),
     _ = require('lodash'),
     fs = require('fs'),
+    Q = require('q'),
     conf = require('../conf.json'),
     express = require('express'),
     router = express.Router();
 // ogni attività di sincronizzazione avrà la sua entry in questo oggetto dove la chiave è il sid
 const sidconns = {
-    // <sid>: <object> 
+    // <sid>: {
+    //     "sid": String,
+    //     "time": Number,
+    //     "socket": Ws
+    // }
 };
 
 /**
@@ -33,7 +38,6 @@ function ip2long(ip) {
  * @return     {promise}  una promessa
  */
 function removeSyncData(sid) {
-    //TODO: rimuovere entry da sidconns (e chiudere il socket?)
     //TODO: rimuovere i dati anche dalle altre tabelle
     return db.Comic.remove({ "sid": sid })
         .then(() => db.Release.remove({ "sid": sid }))
@@ -63,38 +67,86 @@ function newSid(req, res, next) {
 }
 
 /**
- * Segnala che il la sincronizzazione è stata inizializzata.
+ * Crea una istanza di SidConn.
+ * TODO: definire una classe SidConn in un file separato e usarla al posto di questa funzione
  *
- * @param      {string}  sid     identificativo della sincronizzazione
+ * @param      {String}  sid     identificativo della sincronizzazione
+ * @param      {Object}  ws      websocket associato alla connessione
+ * @return     {Object}  una istanza di SidConn
  */
-function signalSidApplied(sid) {
-    // segnalo alla pagina con cui sto comunicando via websocket che il sid è stato inviato dall'app
-    // restituire una promessa (vedi Q) in modo da gestire l'errore di sid non trovato
-    sidconns[sid].socket.send(JSON.stringify({
+function createSidConn(sid, ws) {
+    //TODO: 
+    return {
         "sid": sid,
-        "synced": true
-    }));
+        "time": Date.now(),
+        "socket": ws, //NB verrà sostituito una volta caricata la pagina dei comics
+        "waitFor": function(timeout) {
+            this._deferred = Q.defer();
+            this._hnd = setTimeout(() => {
+                this._deferred.reject('timeout');
+            }, timeout);
+            return this._deferred.promise;
+        },
+        "signal": function() {
+            if (this._hnd) {
+                clearTimeout(this._hnd);
+                this._deferred.resolve();
+                this._deferred = null;
+                this._hnd = null;
+            }
+        },
+        "close": function() {
+            if (this._hnd) {
+                clearTimeout(this._hnd);
+                this._deferred.reject('close');
+                this._deferred = null;
+                this._hnd = null;
+            }
+        }
+    };
 }
 
 /**
  * Gestione della comunicazione con la pagina web tramite websocket.
  */
 router.ws('/wsh/:sid', (ws, req) => {
-    // TODO creo oggetto per gestire il sid
-    //  questo oggetto deve scatenare un evento se non riceve segnali per un certo periodo di tempo
-    //  il primo segnale deve arrivare quando l'app invia i primi dati
     const sid = req.params.sid;
-    sidconns[sid] = {
-        "sid": sid,
-        "time": Date.now(),
-        "socket": ws
-    };
-
-    ws.on('message', (msg) => { 
+    // aspetto che venga chiamato il metodo signal()
+    const sidconn = createSidConn(sid, ws)
+        .waitFor(conf.sync.syncIdTimeout)
+        .then(() => {
+            // segnalo alla pagina con cui sto comunicando via websocket che il sid è stato inviato dall'app
+            sidconn.socket.send(JSON.stringify({
+                "sid": sid,
+                "synced": true
+            }));
+        })
+        .fail((event) => {
+            // rimuovo tutti i dati
+            removeSyncData(sid).done(() => {
+                // se il fallimento è a fronte della chiusura del socket non ha senso inviare il messaggio alla pagina
+                if (event !== 'close') {
+                    // segnalo alla pagina con cui sto comunicando via websocket che il sid NON è stato inviato dall'app
+                    // nel tempo utile
+                    sidconn.socket.send(JSON.stringify({
+                        "sid": sid,
+                        "synced": false
+                    }));
+                }
+            });
+        });
+    // salvo la connessione
+    sidconns[sid] = sidconn;
+    // gestisco gli eventi del socket
+    ws.on('message', (msg) => {
         // TODO gestire i messaggi in arrivo (invio aggiornamenti dei dati effettuati dalla pagina)
     });
     ws.on('close', () => {
-        // TODO il socket è stato chiuso dalla pagina
+        // il socket è stato chiuso dalla pagina
+        // quando l'app invia il sid e i primi dati la pagina con il qrcode viene chiusa così come il socket
+        // ma il metodo signal() a questo punto è già stato chiamato quindi il seguente metodo close() non ha effetto
+        // se invece la pagina viene chiusa prima che l'app invii il sid il metodo close() avrà effetto
+        sidconn.close();
     });
 });
 
@@ -278,7 +330,7 @@ router.post('/:sid/:time', (req, res) => {
             //segnalo che la sincronizzazione è stata accettata e i primi dati sono arrivati
             .then(() => {
                 console.log(' - signal sync status');
-                signalSidApplied(req.params.sid);
+                sidconns[req.params.sid].signal();
             })
             .catch((err) => {
                 console.log(' - catch');

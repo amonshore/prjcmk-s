@@ -125,16 +125,12 @@
 'use strict';
 
 (function ($) {
-    var INTERVAL = 2000;
-    var hnd = void 0,
-        socket = void 0;
+    var socket = void 0;
 
     window.JSVIEW['sync'] = {
         ready: function ready(context) {
             var $qrcode = $('#qrcode', context);
             var sid = $qrcode.attr('data-sid');
-            var timeout = +$qrcode.attr('data-timeout') || 30000;
-            var times = timeout / INTERVAL;
             // renderizzo il sid passato con la pagina
             $qrcode.qrcode({
                 width: 256,
@@ -158,22 +154,15 @@
                 if (data.synced) {
                     // carico la pagina per l'editing dei dati
                     document.location.href = '#sync/comics/' + sid;
-                } else if (! --times) {
+                } else {
                     $qrcode.hide();
                     $('#btnNewCode', context).show();
                     clearInterval(hnd);
                     socket.close();
                 }
             };
-            // // controllo se e' avventua una richiesta del sid dall'app
-            // // scaduto il tempo nascondo il qrcode e mostro pulsante per refresh pagina
-            // hnd = setInterval(() => {
-            //     // la risposta viene controllata nell'evento "onmessage"
-            //     socket.send(JSON.stringify({ "type": "check", "sid": sid }));
-            // }, INTERVAL);
         },
         destroy: function destroy(context) {
-            clearInterval(hnd);
             socket.close();
         }
     };
