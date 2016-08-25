@@ -111,9 +111,9 @@ function createSidConn(sid, ws) {
  */
 router.ws('/wsh/:sid', (ws, req) => {
     const sid = req.params.sid;
+    const sidconn = createSidConn(sid, ws);
     // aspetto che venga chiamato il metodo signal()
-    const sidconn = createSidConn(sid, ws)
-        .waitFor(conf.sync.syncIdTimeout)
+    sidconn.waitFor(conf.sync.syncIdTimeout)
         .then(() => {
             // segnalo alla pagina con cui sto comunicando via websocket che il sid è stato inviato dall'app
             sidconn.socket.send(JSON.stringify({
