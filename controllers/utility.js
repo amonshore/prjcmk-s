@@ -1,13 +1,7 @@
 (() => {
     "use strict";
-    const chalk = require('chalk'),
-        dateformat = require('dateformat');
 
     module.exports = {
-        log: (...args) => {
-            console.log(chalk.gray(dateformat('HH:mm:ss.l')), ...args);
-        },
-
         /**
          * Descrizione errori
          */

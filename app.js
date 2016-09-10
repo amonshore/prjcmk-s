@@ -11,28 +11,18 @@
         express = require('express'),
         mustacheExpress = require('mustache-express'),
         app = express(),
-        expressWs = require('express-ws')(app);
-    // var options = {
-    //     root: __dirname + '/public/',
-    //     dotfiles: 'deny',
-    //     headers: {
-    //         'x-timestamp': Date.now()
-    //     }
-    // };
+        expressWs = require('express-ws')(app),
+        logger = require('./controllers/logger'),
+        conf = require('./conf');
+
     // registro i file .mustache perche' vengano renderizzati con mustacheExpress
     app.engine('mustache', mustacheExpress());
     app.set('view engine', 'mustache');
     app.set('views', __dirname + '/public/views');
     // disabilito la cache delle viste, da riabilitare in produzione
     app.disable('view cache');
-    // request log
-    app.use((req, res, next) => {
-        console.log('[%s] %s %s',
-            chalk.gray(dateFormat('HH:MM:ss.l')),
-            chalk.bgGreen(req.method),
-            chalk.cyan(req.originalUrl));
-        next();
-    });
+    // uso lo stream definito nel logger
+    app.use(require('morgan')(conf.morganFormat, { "stream": logger.stream }));
     // parsing application/json
     app.use(bodyParser.json());
     // parsing application/x-www-form-urlencoded
@@ -58,11 +48,11 @@
     app.use('/remote', require('./controllers/remote')(db));
     // inizializzo il database
     db.init('mongodb://localhost:27017/prjcmk-s').then(() => {
-        // in ascolto sulla porta 3000
-        app.listen(3000, '0.0.0.0', () => {
-            console.log('express listen on port', chalk.green(3000));
+        // avvio il listener sulla porta specificata
+        app.listen(conf.serverPort, '0.0.0.0', () => {
+            logger.info('express listen on port', conf.serverPort);
         });
     }).catch(err => {
-        console.log(err);
+        logger.error(err);
     });
 })();

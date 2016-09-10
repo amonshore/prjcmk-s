@@ -6,8 +6,9 @@
     const _ = require('lodash'),
         fs = require('fs'),
         Q = require('q'),
-        Ut = require('./utility.js'),
-        sidConn = require('./sidconn.js'),
+        Ut = require('./utility'),
+        logger = require('./logger'),
+        sidConn = require('./sidconn'),
         conf = require('../conf.json'),
         express = require('express'),
         router = express.Router();
@@ -22,20 +23,20 @@
     }
 
     function removeSidConn(sidconn, db) {
+        logger.debug(sidconn.sid, 'delete sidconn');
         // rimuovo la connessione dall'elenco e tutti i suoi dati presenti nel db
-        console.log(sidconn.sid, 'delete sidconn');
         delete sidconns[sidconn.sid];
         sidconn.stopWaiting();
         db.removeSyncData(sidconn.sid).fail((err) => {
-            console.error(err);
+            logger.error(err);
         });
     }
 
     function waitForSync(sidconn) {
-        console.log(sidconn.sid, 'waitForSync');
+        logger.debug(sidconn.sid, 'waitForSync');
         sidconn.waitFor(conf.sync.syncIdTimeout).then(() => {
             // invio il messaggio a tutti i client
-            console.log(sidconn.sid, 'timeout');
+            logger.debug(sidconn.sid, 'timeout');
             sidconn.signal({ "message": "sync timeout" });
             sidconn.stopWaiting();
         });
@@ -52,7 +53,7 @@
             const sidconn = getOrCreateSidConn(sid);
             // aggiungo il socket alla lista dei client gestiti dalla connessione
             sidconn.clients.push(ws);
-            console.log(sidconn.sid, 'socket received');
+            logger.debug(sidconn.sid, 'socket received');
             // gestione degli eventi
             ws.on('message', (msg) => {
                 msg = JSON.parse(msg);
@@ -67,13 +68,13 @@
                     case 'stop sync':
                         break;
                     default:
-                        console.error(new Error('Message not valid: ' + msg.message));
+                        logger.error(new Error('Message not valid: ' + msg.message));
                 }
             });
             ws.on('close', () => {
                 // un socket è stato chisuo, lo rimuovo dalla connessione
                 // quando non ce ne sono più rimuovo tutta la connessione
-                console.log(sid, 'socket closed');
+                logger.debug(sid, 'socket closed');
                 if (_.pull(sidconn.clients, ws).length === 0) {
                     removeSidConn(sidconn, db);
                 }
@@ -164,13 +165,13 @@
         //  */
         // router.post('/:sid/:time', (req, res) => {
         //     if (conf.debug) {
-        //         console.log(' - received ' + (+req.get('content-length') / 1024).toFixed(2) + ' KB');
+        //         logger.debug(' - received ' + (+req.get('content-length') / 1024).toFixed(2) + ' KB');
         //         fs.open('./sync.log', 'w', (err, fd) => {
         //             if (err) {
-        //                 console.error(err);
+        //                 logger.error(err);
         //             } else {
         //                 fs.write(fd, JSON.stringify(req.body, null, 2), (err) => {
-        //                     err && console.error(err);
+        //                     err && logger.error(err);
         //                 });
         //             }
         //         })
@@ -201,7 +202,7 @@
         //                             }
         //                         }))
         //                     .then(docs => {
-        //                         console.log(' -', docs.length, 'comics added for sid ', req.params.sid);
+        //                         logger.debug(' -', docs.length, 'comics added for sid ', req.params.sid);
         //                     });
         //             })
         //             .then(() => {
@@ -224,12 +225,12 @@
         //                             }));
         //                         }, []))
         //                     .then(docs => {
-        //                         console.log(' -', docs.length, 'releases added for sid ', req.params.sid);
+        //                         logger.debug(' -', docs.length, 'releases added for sid ', req.params.sid);
         //                     });
         //             })
         //             //aggiorno lo stato del sid e invio la risposta
         //             .then(() => {
-        //                 console.log(' - update sync status');
+        //                 logger.debug(' - update sync status');
         //                 const now = Date.now();
         //                 return db.updateSync(req.params.sid, { "lastSync": now, "status": db.SyncStatus.DATA_RECEIVED })
         //                     .exec().then(doc => {
@@ -238,11 +239,11 @@
         //             })
         //             //segnalo che la sincronizzazione è stata accettata e i primi dati sono arrivati
         //             .then(() => {
-        //                 console.log(' - signal sync status');
+        //                 logger.debug(' - signal sync status');
         //                 sidconns[req.params.sid].signal();
         //             })
         //             .catch((err) => {
-        //                 console.log(' - catch');
+        //                 logger.debug(' - catch');
         //                 res.status(500).send(Ut.parseError(err).descr);
         //             });
         //     } else {
@@ -256,7 +257,7 @@
          */
         router.get('/', (req, res) => {
             db.newSid(Ut.ip2long(req.ip)).then((doc) => {
-                console.log('new sid', doc.sid);
+                logger.debug('new sid', doc.sid);
                 res.render('sync.mustache', { "sid": doc.sid, "timeout": conf.sync.syncIdTimeout });
             }).fail((err) => {
                 res.status(500).send(Ut.parseError(err).descr);

@@ -1,6 +1,7 @@
 (() => {
     "use strict";
-    const Q = require('Q');
+    const Q = require('Q'),
+        logger = require('./logger');
 
     /**
      * Crea un Generator. Ad ogni chiamata di next() viene azzerato un contatore interno.
@@ -65,7 +66,7 @@
                 }
                 if (!_wh.next().done) {
                     const message = JSON.stringify(value);
-                    console.log(this.sid, 'send', message);
+                    logger.debug(this.sid, 'send', message);
                     this.time = Date.now();
                     this.clients.filter(client => client != from).forEach((client) => {
                         client.send(message);

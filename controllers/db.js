@@ -4,12 +4,11 @@
      * Interfaccia verso il db, definizione schema delle collection.
      * Richiamare db.init(<url>) per inizializzare il db, ritorna una promise
      */
-    const chalk = require('chalk'),
-        Q = require('q'),
+    const Q = require('q'),
         mongoose = require('mongoose'),
         Schema = mongoose.Schema,
         ObjectId = Schema.ObjectId,
-        Ut = require('./utility.js');
+        logger = require('./logger');
 
     // schema utente
     // NB: Comic.sid e Release.relid non sono più chiave primarie, 
@@ -97,16 +96,16 @@
         init: function(url) {
             return mongoose.connect(url)
                 .then(() => {
-                    Ut.log('mongodb connected on', chalk.green(url));
+                    logger.info('mongodb connected on', url);
                 })
                 .then(Sync.remove().then(() => {
-                    console.log(' - sync cleared');
+                    logger.debug('sync cleared');
                 }))
                 .then(Comic.remove({ "sid": { "$exists": true } }).then(() => {
-                    console.log(' - comics (with sid) cleared');
+                    logger.debug('comics (with sid) cleared');
                 }))
                 .then(Release.remove({ "sid": { "$exists": true } }).then(() => {
-                    console.log(' - releases (with sid) cleared');
+                    logger.debug('releases (with sid) cleared');
                 }));
         },
 
