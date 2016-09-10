@@ -1,5 +1,5 @@
 ($ => {
-    window.JSVIEW['synccomics'] = {
+    JSVIEW.define('synccomics', {
         ready: (context) => {
         	// registro l'evento per la ricerca
             context.on('searchbox:search', (event, term) => {
@@ -19,5 +19,5 @@
             	}
             });
         }
-    }
+    });
 })(jQuery);

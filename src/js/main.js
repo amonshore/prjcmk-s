@@ -1,6 +1,6 @@
 ($ => {
     // oggetto che andra' a contenere i riferimeti ai JS di tutte le pagine
-    window.JSVIEW = {
+    const views = {
         // "page_name": {
         //     "ready": function(context) {},
         //     "destroy": function(context) {}
@@ -8,6 +8,12 @@
         // sul contesto (context) possono essere registarti i seguenti eventi:
         // - searchbox:search
     };
+    // oggetto globale 
+    window.JSVIEW = {
+        define: function(name, handler) {
+            views[name] = handler;
+        }
+    }
 
     /**
      * Carica la pagina specificata da "page"
@@ -29,14 +35,14 @@
                         swal({ title: 'Page id not found', text: 'The page script can not be executed', type: 'error' });
                     } else {
                         // scarico la pagina corrente                    
-                        lastPageId && window.JSVIEW[lastPageId] && (window.JSVIEW[lastPageId].destroy || $.noop)($pageBody);
+                        lastPageId && views[lastPageId] && (views[lastPageId].destroy || $.noop)($pageBody);
                         // mostro o nascondo la barra di ricerca in base alla classe .with-searchbox
                         $searchbox.toggle(!!$pageBody.find('.page.with-searchbox').length);
                         // elimino gli eventi legati al contesto
                         $pageBody.off('searchbox:search');
                         // lancio lo script della pagina caricata
                         $pageBody.attr('data-page-id', pageId);
-                        window.JSVIEW[pageId] && (window.JSVIEW[pageId].ready || $.noop)($pageBody);
+                        views[pageId] && (views[pageId].ready || $.noop)($pageBody);
                     }
                 } else {
                     $searchbox.hide();

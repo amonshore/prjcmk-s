@@ -2,13 +2,19 @@
 
 (function ($) {
     // oggetto che andra' a contenere i riferimeti ai JS di tutte le pagine
-    window.JSVIEW = {
+    var views = {
         // "page_name": {
         //     "ready": function(context) {},
         //     "destroy": function(context) {}
         // }
         // sul contesto (context) possono essere registarti i seguenti eventi:
         // - searchbox:search
+    };
+    // oggetto globale 
+    window.JSVIEW = {
+        define: function define(name, handler) {
+            views[name] = handler;
+        }
     };
 
     /**
@@ -30,14 +36,14 @@
                     swal({ title: 'Page id not found', text: 'The page script can not be executed', type: 'error' });
                 } else {
                     // scarico la pagina corrente                    
-                    lastPageId && window.JSVIEW[lastPageId] && (window.JSVIEW[lastPageId].destroy || $.noop)($pageBody);
+                    lastPageId && views[lastPageId] && (views[lastPageId].destroy || $.noop)($pageBody);
                     // mostro o nascondo la barra di ricerca in base alla classe .with-searchbox
                     $searchbox.toggle(!!$pageBody.find('.page.with-searchbox').length);
                     // elimino gli eventi legati al contesto
                     $pageBody.off('searchbox:search');
                     // lancio lo script della pagina caricata
                     $pageBody.attr('data-page-id', pageId);
-                    window.JSVIEW[pageId] && (window.JSVIEW[pageId].ready || $.noop)($pageBody);
+                    views[pageId] && (views[pageId].ready || $.noop)($pageBody);
                 }
             } else {
                 $searchbox.hide();
@@ -92,7 +98,7 @@
 'use strict';
 
 (function ($) {
-    window.JSVIEW['remote'] = {
+    JSVIEW.define('remote', {
         ready: function ready(context) {
             $('button[data-action]', context).click(function (e) {
                 e.stopPropagation();
@@ -120,14 +126,14 @@
                 });
             });
         }
-    };
+    });
 })(jQuery);
 'use strict';
 
 (function ($) {
     var socket = void 0;
 
-    window.JSVIEW['sync'] = {
+    JSVIEW.define('sync', {
         ready: function ready(context) {
             var $qrcode = $('#qrcode', context);
             var sid = $qrcode.attr('data-sid');
@@ -141,36 +147,33 @@
             $('#btnNewCode', context).click(function (e) {
                 document.location.reload();
             });
-            // creo un web socket per controllare lo stato del sid
+            // creo un web socket e invio un messaggio al server per indicare che sono in attesa della sincronizzazione
             socket = new WebSocket('ws://' + location.host + '/sync/wsh/' + sid);
-            // socket.onopen = (event) => {
-            //     console.log(event);
-            // };
+            socket.onopen = function (event) {
+                socket.send(JSON.stringify({ "message": "wait for sync" }));
+            };
             socket.onerror = function (error) {
                 console.log(error);
             };
             socket.onmessage = function (event) {
-                var data = JSON.parse(event.data);
-                if (data.synced) {
-                    // carico la pagina per l'editing dei dati
-                    document.location.href = '#sync/comics/' + sid;
-                } else {
+                // TODO: gestire messaggi in arrivo
+                var msg = JSON.parse(event.data);
+                if (msg.message === 'sync timeout') {
                     $qrcode.hide();
                     $('#btnNewCode', context).show();
-                    clearInterval(hnd);
                     socket.close();
-                }
+                } else if (msg.message === 'sync start') {}
             };
         },
         destroy: function destroy(context) {
             socket.close();
         }
-    };
+    });
 })(jQuery);
 'use strict';
 
 (function ($) {
-    window.JSVIEW['synccomics'] = {
+    JSVIEW.define('synccomics', {
         ready: function ready(context) {
             // registro l'evento per la ricerca
             context.on('searchbox:search', function (event, term) {
@@ -190,7 +193,7 @@
                 }
             });
         }
-    };
+    });
 })(jQuery);
 'use strict';
 
@@ -207,7 +210,7 @@
         '3': 'DATA_RECEIVED'
     };
 
-    window.JSVIEW['synclist'] = {
+    JSVIEW.define('synclist', {
         ready: function ready(context) {
             $('[data-format]', context).each(function (index, el) {
                 el.innerHTML = fomratters[el.attributes['data-format'].value](el.innerText);
@@ -228,11 +231,7 @@
                     if (confirm) {
                         setTimeout(function () {
                             if (action === 'sync') {
-                                $.post('/sync/' + sid).then(function () {
-                                    location.reload();
-                                }).fail(function (jqXHR, textStatus, errorThrown) {
-                                    swal({ title: 'Sync', text: textStatus + ': ' + errorThrown, type: 'error' });
-                                });
+                                // TODO aprie un WebSocket per simulare l'app
                             } else if (action === 'expire') {
                                 $.post('/sync/change/' + sid, { 'lastSync': Date.now() - 30000 }).then(function () {
                                     location.reload();
@@ -251,7 +250,7 @@
                 });
             });
         }
-    };
+    });
 })(jQuery);
 "use strict";
 

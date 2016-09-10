@@ -1,7 +1,7 @@
 ($ => {
     let socket;
 
-    window.JSVIEW['sync'] = {
+    JSVIEW.define('sync', {
         ready: (context) => {
             const $qrcode = $('#qrcode', context);
             const sid = $qrcode.attr('data-sid');
@@ -16,29 +16,28 @@
             $('#btnNewCode', context).click(e => {
                 document.location.reload();
             });
-            // creo un web socket per controllare lo stato del sid
-            socket = new WebSocket('ws://' + location.host +'/sync/wsh/' + sid);
-            // socket.onopen = (event) => {
-            //     console.log(event);
-            // };
+            // creo un web socket e invio un messaggio al server per indicare che sono in attesa della sincronizzazione
+            socket = new WebSocket('ws://' + location.host + '/sync/wsh/' + sid);
+            socket.onopen = (event) => {
+                socket.send(JSON.stringify({ "message": "wait for sync" }));
+            };
             socket.onerror = (error) => {
                 console.log(error);
             };
             socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                if (data.synced) {
-                    // carico la pagina per l'editing dei dati
-                    document.location.href = '#sync/comics/' + sid;
-                } else {
+                // TODO: gestire messaggi in arrivo
+                const msg = JSON.parse(event.data);
+                if (msg.message === 'sync timeout') {
                     $qrcode.hide();
                     $('#btnNewCode', context).show()
-                    clearInterval(hnd);
                     socket.close();
+                } else if (msg.message === 'sync start') {
+
                 }
             };
         },
         destroy: (context) => {
             socket.close();
         }
-    }
+    });
 })(jQuery);

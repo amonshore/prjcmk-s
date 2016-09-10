@@ -7,7 +7,7 @@
         '3': 'DATA_RECEIVED'
     }
 
-    window.JSVIEW['synclist'] = {
+    JSVIEW.define('synclist', {
         ready: (context) => {
             $('[data-format]', context).each((index, el) => {
                 el.innerHTML = fomratters[el.attributes['data-format'].value](el.innerText);
@@ -29,11 +29,7 @@
                         if (confirm) {
                             setTimeout(() => {
                                 if (action === 'sync') {
-                                    $.post('/sync/' + sid).then(() => {
-                                        location.reload();
-                                    }).fail((jqXHR, textStatus, errorThrown) => {
-                                        swal({ title: 'Sync', text: textStatus + ': ' + errorThrown, type: 'error' });
-                                    });
+                                    // TODO aprie un WebSocket per simulare l'app
                                 } else if (action === 'expire') {
                                     $.post('/sync/change/' + sid, { 'lastSync': Date.now() - 30000 }).then(() => {
                                         location.reload();
@@ -52,5 +48,5 @@
                     });
             });
         }
-    }
+    });
 })(jQuery);

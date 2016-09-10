@@ -1,5 +1,5 @@
 ($ => {
-    window.JSVIEW['remote'] = {
+    JSVIEW.define('remote', {
         ready: (context) => {
             $('button[data-action]', context).click(e => {
                 e.stopPropagation();
@@ -26,5 +26,5 @@
                     });
             });
         }
-    }
+    });
 })(jQuery);
