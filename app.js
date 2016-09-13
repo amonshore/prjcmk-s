@@ -44,8 +44,8 @@
     // app.use('/comics', require('./controllers/comics_v1'));
     // app.use('/releases', require('./controllers/releases_v1'));
     // app.use('/categories', require('./controllers/categories_v1'));
-    app.use('/sync', require('./controllers/sync')(db));
-    app.use('/remote', require('./controllers/remote')(db));
+    app.use('/sync', require('./controllers/sync'));
+    app.use('/remote', require('./controllers/remote'));
     // inizializzo il database
     db.init('mongodb://localhost:27017/prjcmk-s').then(() => {
         // avvio il listener sulla porta specificata

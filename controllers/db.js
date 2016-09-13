@@ -86,7 +86,7 @@
     // uso Q come promises per mongoose
     mongoose.Promise = Q.Promise;
 
-    module.exports = {
+    const db = {
         /**
          * Inizializza il db.
          * 
@@ -195,6 +195,9 @@
         },
 
         addComics: function(...comics) {
+            if (comics.length === 1 && comics[0] instanceof Array) {
+                comics = comics[0];
+            }
             if (comics.length > 1) {
                 return Comic.insertMany(comics);
             } else {
@@ -203,6 +206,9 @@
         },
 
         addReleases: function(...releases) {
+            if (releases.length === 1 && releases[0] instanceof Array) {
+                releases = releases[0];
+            }            
             if (releases.length > 1) {
                 return Release.insertMany(releases);
             } else {
@@ -210,4 +216,6 @@
             }
         }
     };
+
+    module.exports = db;
 })();

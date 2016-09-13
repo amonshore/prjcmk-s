@@ -162,7 +162,9 @@
                     $qrcode.hide();
                     $('#btnNewCode', context).show();
                     socket.close();
-                } else if (msg.message === 'sync start') {}
+                } else if (msg.message === 'sync start') {
+                    location.href = '#sync/comics/' + sid;
+                }
             };
         },
         destroy: function destroy(context) {

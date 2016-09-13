@@ -33,9 +33,16 @@
             // sockets
             clients: [],
             /**
-             * Attende che NON venga inviato un segnale per un certo periodi di tempo.
-             * Ritorna una Promise che viene risolta allo scadere del timeout, 
-             * oppure rifiutata se waitFor è stato chiamato più di una volta senza chiamare stopWaiting.
+             * Indica se la connessione è in attesa di un segnale
+             *
+             * @return     {boolean}  True è in attesa, false altrimenti
+             */
+            isWaiting: function() {
+                return !!_wh;
+            },
+            /**
+             * Se non viene chiamato signal() per il tempo definito da timeout, risolve la promise.
+             * La promessa viene rifiutata se waitFor è stato chiamato più di una volta senza chiamare stopWaiting.
              *
              * @param      {Number}  timeout  millisecondi entro i quali deve essere inviato un segnale
              * @return     {Promise}  una promessa che viene risolta allo scadere del timout
@@ -54,25 +61,13 @@
                 return def.promise;
             },
             /**
-             * Invia un messaggio a tutti i client, tranne che al mittente.
-             * Il mittente può essere omesso.
-             *
-             * @param      {WebSocket}  from    [opzionale] mittente
-             * @param      {Object}  value   messaggio da inviare
+             * Il conto alla rovescia viene rinnovato.
              */
-            signal: function(from, value) {
-                if (value === undefined) {
-                    value = from;
-                }
-                if (!_wh.next().done) {
-                    const message = JSON.stringify(value);
-                    logger.debug(this.sid, 'send', message);
-                    this.time = Date.now();
-                    this.clients.filter(client => client != from).forEach((client) => {
-                        client.send(message);
-                    })
-                } else {
+            signal: function() {
+                if (_wh.next().done) {
                     throw new Error('SidConn signal error: timeout reached');
+                } else {
+                    this.time = Date.now();
                 }
             },
             /**

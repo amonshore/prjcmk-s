@@ -2,7 +2,8 @@
     "use strict";
     const forever = require('forever'),
         spawn = require('child_process').spawn,
-        Ut = require('./utility.js'),        
+        Ut = require('./utility'),
+        db = require('./db'),
         process = require('process'),
         express = require('express'),
         router = express.Router();
@@ -30,92 +31,89 @@
         });
     }
 
-    module.exports = (db) => {
-
-        /**
-         * Restituisce l'elenco dei processi in esecuzione tramite forever.
-         * 
-         * @return     {array} array di oggetti process
-         */
-        router.get('/list', (req, res) => {
-            forever.list(true, (err, processes) => {
-                if (err) {
-                    res.status(500).send(err);
-                } else {
-                    res.json(parseProcesses(processes || ''));
-                }
-            });
+    /**
+     * Restituisce l'elenco dei processi in esecuzione tramite forever.
+     * 
+     * @return     {array} array di oggetti process
+     */
+    router.get('/list', (req, res) => {
+        forever.list(true, (err, processes) => {
+            if (err) {
+                res.status(500).send(err);
+            } else {
+                res.json(parseProcesses(processes || ''));
+            }
         });
+    });
 
-        /**
-         * Termina un processo eseguito con forever tramite il suo pid.
-         * 
-         * @param      {string} pid identificativo del processo da terminare, 
-         *                          se non specificato verrà considerato il 
-         *                          processo corrente
-         */
-        router.get('/stop', (req, res) => {
-            const pid = req.params.pid || process.pid;
-            console.log('*** try stop', pid);
-            // carico tutti i processi gestiti da forever
-            forever.list(true, (err, processes) => {
-                if (err) {
-                    res.status(500).send(err);
-                } else {
-                    // cerco il processo con il pid richiesto (serve l'indice del processo)
-                    const proc = parseProcesses(processes || '').find(p => p.pid == pid);
-                    console.log('*** found', JSON.stringify(proc));
-                    if (proc) {
-                        forever.stop(proc.index);
-                        res.status(200).send('ok');
-                    } else {
-                        res.status(404).send('Process not found');
-                    }
-                }
-            });
-        });
-
-        /**
-         * Riavvia un processo eseguito con forever tramite il suo pid. 
-         * 
-         * @param      {string} pid identificativo del processo da terminare, 
-         *                          se non specificato verrà considerato il 
-         *                          processo corrente
-         */
-        router.get('/restart', (req, res) => {
-            const pid = req.params.pid || process.pid;
-            console.log('*** forevere restart', pid);
-            spawn('forever', ['restart', pid]);
-            res.status(200).send('ok');
-        });
-
-        /**
-         * Drop database
-         */
-        router.get('/dropdatabase', (req, res) => {
-            db.dropDatabase()
-                .then(() => {
+    /**
+     * Termina un processo eseguito con forever tramite il suo pid.
+     * 
+     * @param      {string} pid identificativo del processo da terminare, 
+     *                          se non specificato verrà considerato il 
+     *                          processo corrente
+     */
+    router.get('/stop', (req, res) => {
+        const pid = req.params.pid || process.pid;
+        console.log('*** try stop', pid);
+        // carico tutti i processi gestiti da forever
+        forever.list(true, (err, processes) => {
+            if (err) {
+                res.status(500).send(err);
+            } else {
+                // cerco il processo con il pid richiesto (serve l'indice del processo)
+                const proc = parseProcesses(processes || '').find(p => p.pid == pid);
+                console.log('*** found', JSON.stringify(proc));
+                if (proc) {
+                    forever.stop(proc.index);
                     res.status(200).send('ok');
-                })
-                .catch(err => {
-                    res.status(500).send(Ut.parseError(err).descr);
-                });
+                } else {
+                    res.status(404).send('Process not found');
+                }
+            }
         });
+    });
 
-        /**
-         * Restituisce il pid del processo corrente.
-         */
-        router.get('/pid', (req, res) => {
-            res.json({ "pid": process.pid });
-        });
+    /**
+     * Riavvia un processo eseguito con forever tramite il suo pid. 
+     * 
+     * @param      {string} pid identificativo del processo da terminare, 
+     *                          se non specificato verrà considerato il 
+     *                          processo corrente
+     */
+    router.get('/restart', (req, res) => {
+        const pid = req.params.pid || process.pid;
+        console.log('*** forevere restart', pid);
+        spawn('forever', ['restart', pid]);
+        res.status(200).send('ok');
+    });
 
-        /**
-         * Restituisce la pagina "remote" renderizzata.
-         */
-        router.get('/', (req, res) => {
-            res.render('remote.mustache', { "pid": process.pid });
-        });
+    /**
+     * Drop database
+     */
+    router.get('/dropdatabase', (req, res) => {
+        db.dropDatabase()
+            .then(() => {
+                res.status(200).send('ok');
+            })
+            .catch(err => {
+                res.status(500).send(Ut.parseError(err).descr);
+            });
+    });
 
-        return router;
-    };
+    /**
+     * Restituisce il pid del processo corrente.
+     */
+    router.get('/pid', (req, res) => {
+        res.json({ "pid": process.pid });
+    });
+
+    /**
+     * Restituisce la pagina "remote" renderizzata.
+     */
+    router.get('/', (req, res) => {
+        res.render('remote.mustache', { "pid": process.pid });
+    });
+
+    module.exports = router;
 })();
