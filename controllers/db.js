@@ -16,11 +16,13 @@
     const Comic = mongoose.model('Comic', new Schema({
         cid: {
             type: String,
+            match: /[^\s]/,
             required: true,
             index: true
         },
         name: {
             type: String,
+            match: /[^\s]/,
             required: true
         },
         series: String,
@@ -109,6 +111,10 @@
                 }));
         },
 
+        stats: function() {
+            return mongoose.connection.db.stats();
+        },
+
         /**
          * Elimina l'intero database.
          *
@@ -186,14 +192,20 @@
          *
          * @param      {String} sid l'identificativo della sincronizzazione da modificare
          * @param      {Sync}  sync    la sincronizzazione modificata
-         * @return     {Promise}  nella promise viene ritornato la sincronizzazione prima della modifica
+         * @return     {Promise}  nella promise viene ritornata la sincronizzazione modificata
          */
         updateSync: function(sid, sync) {
             const update = Object.assign({}, sync);
             delete update.sid;
-            return Sync.findOneAndUpdate({ "sid": sid }, update).exec();
+            return Sync.findOneAndUpdate({ "sid": sid }, update, { "new": true, "runValidators": true }).exec();
         },
 
+        /**
+         * Aggiunge uno o più comics.
+         *
+         * @param      {Array}  comics  comics da aggiungere
+         * @return     {Promise}  una promise sul salvataggio dei dati
+         */
         addComics: function(...comics) {
             if (comics.length === 1 && comics[0] instanceof Array) {
                 comics = comics[0];
@@ -205,10 +217,57 @@
             }
         },
 
+        /**
+         * Modfifica un comics esistente. 
+         * Il cid non può essere modificato.
+         *
+         * @param      {String} cid l'identificativo del comics da modificare
+         * @param      {Comics}  comics    il comics modificata
+         * @return     {Promise}  nella promise viene ritornata il comics modificato
+         */
+        updateComics: function(cid, comics) {
+            const update = Object.assign({}, comics);
+            delete update.cid;
+            return Comic.findOneAndUpdate({ "cid": cid }, update, { "new": true, "runValidators": true }).exec();
+        },
+
+        /**
+         * Aggiunge un comics o lo aggiorna se già esiste.
+         *
+         * @param      {String}  cid     l'identificativo del comics da modificare o aggiungere
+         * @param      {Comics}  comics  il comcis contenente le modifiche
+         * @return     {Promise}  nella promise viene ritornato il comics modificato
+         */
+        addOrUpdateComics: function(cid, comics) {
+            const update = Object.assign({}, comics);
+            return Q.try(function() {
+                if (update.hasOwnProperty('cid')) {
+                    if (update.cid !== cid) {
+                        throw new Error('Cannot update comcis with different cid');
+                    }
+                } else {
+                    update.cid = cid;
+                }
+                return Comic.findOneAndUpdate({ "cid": cid },
+                    update, {
+                        "new": true,
+                        "upsert": true,
+                        "setDefaultsOnInsert": true,
+                        "runValidators": true
+                    }).exec();
+            });
+        },
+
+        /**
+         * Aggiunge una o più release.
+         *
+         * @param      {Array}    releases  release da aggiungere
+         * @return     {Promise}  una promise sul salvataggio dei dati
+         */
         addReleases: function(...releases) {
             if (releases.length === 1 && releases[0] instanceof Array) {
                 releases = releases[0];
-            }            
+            }
             if (releases.length > 1) {
                 return Release.insertMany(releases);
             } else {

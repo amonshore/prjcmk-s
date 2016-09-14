@@ -47,7 +47,7 @@
     app.use('/sync', require('./controllers/sync'));
     app.use('/remote', require('./controllers/remote'));
     // inizializzo il database
-    db.init('mongodb://localhost:27017/prjcmk-s').then(() => {
+    db.init(conf.dbUrl).then(() => {
         // avvio il listener sulla porta specificata
         app.listen(conf.serverPort, '0.0.0.0', () => {
             logger.info('express listen on port', conf.serverPort);

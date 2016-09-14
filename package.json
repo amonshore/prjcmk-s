@@ -4,8 +4,8 @@
   "description": "prjcmk web app",
   "main": "app.js",
   "scripts": {
-    "pretest": "rm -f ./logs/*.log",
-    "test": "node app.js",
+    "test": "mocha",
+    "prestart": "rm -f ./logs/*.log",
     "start": "node app.js"
   },
   "repository": {
@@ -52,6 +52,7 @@
     "gulp-sourcemaps": "^1.6.0",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",
-    "gulp-watch": "^4.3.9"
+    "gulp-watch": "^4.3.9",
+    "mocha": "^3.0.2"
   }
 }
