@@ -41,21 +41,25 @@ client => server
 ### put comics
 * aggiunge o modifica uno o più comics (verranno modificati solo gli attributi effettivamente passati in "data")
 * non vengono aggiornate le release
+* data: { cid, name, ... }
 * data: [{ cid, name, ... }]
 
 ### remove comics
-* elimina uno o più comics (oppure tutti con data = "*")
+* elimina uno o più comics (e relative releases)
+* data: cid
 * data: [cid]
-* data: "*"
+
+### clear comics
+* elimina tutti i comics (e relative release)
+* data: *nessuno*
 
 ### put releases
 * aggiunge o modifica uno o più release (verranno modificati solo gli attributi effettivamente passati in "data"), se il comics di riferimento non esiste la release viene scartata
 * data: [{ cid, number, ... }]
 
 ### remove releases
-* elimina uno o più releases (oppure tutti con data = "*")
+* elimina uno o più releases
 * data: [{ cid, number }]
-* data: "*"
 
 ### stop sync
 * interrompe la sincronizzazione
@@ -78,11 +82,17 @@ server => client
 
 ### comics updated
 * avverte i client che uno o più comics sono stati modificati
+* data: { cid, name, ... }
 * data: [{ cid, name, ... }]
 
 ### comics removed
-* avverte i client che uno o più cocmis sono stati rimossi
+* avverte i client che uno o più comics (e relative release) sono stati rimossi
+* data: number
 * data: [number]
+
+### comics cleared
+* avverte i client che tutti i comics (e relative release) sono stati eliminati
+* data: *nessuno*
 
 ### releases updated
 * avverte i client che uno o più release sono state modificate

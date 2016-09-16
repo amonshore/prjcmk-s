@@ -58,6 +58,14 @@
         });
     }
 
+    function normalizeComics(comics, sid, status, time) {
+        comics.cid = comics.id;
+        comics.sid = sid;
+        comics.syncStatus = +status || db.SyncStatus.DATA_RECEIVED;
+        comics.syncTime = +time || Date.now();
+        return comics;
+    }
+
     function hello(sidconn, data) {
         if (sidconn.isWaiting()) {
             logger.debug(sidconn.sid, 'hello');
@@ -144,6 +152,34 @@
         }
     }
 
+    function putComics(sidconn, ws, data) {
+        sidconn.signal();
+        Q.all(data instanceof Array ?
+                Q.all(data.map(comics => db.addOrUpdateComics(comics.id, normalizeComics(comics, sidconn.sid)))) :
+                db.addOrUpdateComics(data.id, normalizeComics(data, sidconn.sid)))
+            .then((docs) => {
+                send(sidconn, ws, { "message": "comics updated", "data": docs });
+            }).catch((err) => {
+                logger.error(err);
+            });
+    }
+
+    function removeComics(sidconn, ws, data) {
+        sidconn.signal();
+        Q.all(data instanceof Array ?
+                Q.all(data.map(id => db.removeComics(id, sidconn.sid))) :
+                db.removeComics(data, sidconn.sid))
+            .then((docs) => {
+                if (docs instanceof Array) {
+                    send(sidconn, ws, { "message": "comics removed", "data": docs.map(doc => doc.cid) });
+                } else if (docs) {
+                    send(sidconn, ws, { "message": "comics removed", "data": docs.cid });
+                }
+            }).catch((err) => {
+                logger.error(err);
+            });        
+    }
+
     /**
      * Gestione della comunicazione con la pagina web tramite websocket.
      */
@@ -157,6 +193,7 @@
         logger.debug(sidconn.sid, 'socket received');
         // gestione degli eventi
         ws.on('message', (message) => {
+            logger.debug(sidconn.sid, 'message received', message);
             const msg = JSON.parse(message);
             switch (msg.message) {
                 case 'wait for sync':
@@ -166,7 +203,12 @@
                     hello(sidconn, msg.data);
                     break;
                 case 'put comics':
+                    putComics(sidconn, ws, msg.data);
+                    break;
                 case 'remove comics':
+                    removeComics(sidconn, ws, msg.data);
+                    break;
+                case 'clear comics':
                 case 'put releases':
                 case 'remove releases':
                 case 'stop sync':

@@ -72,6 +72,12 @@
                     assert.ok(doc != null, 'comics not found');
                 }).then(done).catch(done);
         });
+        it('update a comics with data not in schema is not permitted', function(done) {
+            db.updateComics("999999999", { "extra": 0 })
+                .then(function(doc) {
+                    assert.ok(doc != null && doc.extra === undefined, 'extra data is not permitted');
+                }).then(done).catch(done);
+        });        
         it('update a comics with empty name is not permitted', function(done) {
             db.updateComics("999999999", { "name": " " })
                 .catch(() => done()).then(function(doc) {
@@ -103,6 +109,24 @@
                 .catch(() => done()).then(function(doc) {
                     assert.ok(doc == null, 'comcis cannot be updated');
                 }).catch(done);
+        });
+        it('remove a comics', function(done) {
+        	db.removeComics("999999999")
+        		.then(function(doc) {
+        			assert.ok(doc != null && doc.cid === "999999999");
+        		}).then(done).catch(done);
+        });
+        it('remove a comics with sid', function(done) {
+            db.removeComics("999999999_1", "1")
+                .then(function(doc) {
+                    assert.ok(doc != null && doc.cid === "999999999_1");
+                }).then(done).catch(done);
+        });
+        it('remove a comics that not exists', function(done) {
+        	db.removeComics("xxx")
+        		.then(function(doc) {
+        			assert.ok(doc == null);
+        		}).then(done).catch(done);
         });
     });
 })();

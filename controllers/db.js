@@ -259,6 +259,19 @@
         },
 
         /**
+         * Elimina un comics e relative release.
+         *
+         * @param      {String}  cid     l'identificativo del comics da eliminare
+         * @param      {String}  sid     [opzionale] identificativo della sincronizzazione
+         * @return     {Promise}  nella promise viene ritornato il comics eliminato
+         */
+        removeComics: function(cid, sid) {
+            const filter = (sid === undefined ? { "cid": cid } : { "cid": cid, "sid": sid });
+            return Release.remove(filter)
+                .then(() => Comic.findOneAndRemove(filter));
+        },
+
+        /**
          * Aggiunge una o più release.
          *
          * @param      {Array}    releases  release da aggiungere
