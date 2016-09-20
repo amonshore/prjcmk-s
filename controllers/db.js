@@ -43,12 +43,17 @@
     }));
     // schema release
     const Release = mongoose.model('Release', new Schema({
-        relid: { // combinazione di cid e number
+        cid: {
             type: String,
-            required: true
+            match: /[^\s]/,
+            required: true,
+            index: true
         },
-        cid: String,
-        number: Number,
+        number: {
+            type: Number,
+            required: true,
+            index: true
+        },
         date: String,
         price: Number,
         flags: Number,
@@ -221,34 +226,54 @@
          * Modfifica un comics esistente. 
          * Il cid non può essere modificato.
          *
+         * @param      {String} [opzionale] sid l'identificativo della sincronizzazione
          * @param      {String} cid l'identificativo del comics da modificare
          * @param      {Comics}  comics    il comics modificata
          * @return     {Promise}  nella promise viene ritornata il comics modificato
          */
-        updateComics: function(cid, comics) {
+        updateComics: function(sid, cid, comics) {
+            if (comics === undefined) {
+                comics = cid;
+                cid = sid;
+                sid = undefined;
+            }
+            const filter = (sid === undefined ? { "cid": cid } : { "cid": cid, "sid": sid });
             const update = Object.assign({}, comics);
+            delete update.sid;
             delete update.cid;
-            return Comic.findOneAndUpdate({ "cid": cid }, update, { "new": true, "runValidators": true }).exec();
+            return Comic.findOneAndUpdate(filter, update, { "new": true, "runValidators": true }).exec();
         },
 
         /**
          * Aggiunge un comics o lo aggiorna se già esiste.
          *
+         * @param      {String} [opzionale] sid l'identificativo della sincronizzazione
          * @param      {String}  cid     l'identificativo del comics da modificare o aggiungere
          * @param      {Comics}  comics  il comcis contenente le modifiche
          * @return     {Promise}  nella promise viene ritornato il comics modificato
          */
-        addOrUpdateComics: function(cid, comics) {
+        addOrUpdateComics: function(sid, cid, comics) {
+            if (comics === undefined) {
+                comics = cid;
+                cid = sid;
+                sid = undefined;
+            }
+            const filter = (sid === undefined ? { "cid": cid } : { "cid": cid, "sid": sid });
             const update = Object.assign({}, comics);
             return Q.try(function() {
-                if (update.hasOwnProperty('cid')) {
+                if (update.hasOwnProperty('sid')) {
+                    if (update.sid !== sid) {
+                        throw new Error('Cannot update comcis with different sid');
+                    }
+                } else if (update.hasOwnProperty('cid')) {
                     if (update.cid !== cid) {
                         throw new Error('Cannot update comcis with different cid');
                     }
                 } else {
+                    update.sid = sid;
                     update.cid = cid;
                 }
-                return Comic.findOneAndUpdate({ "cid": cid },
+                return Comic.findOneAndUpdate(filter,
                     update, {
                         "new": true,
                         "upsert": true,
@@ -261,14 +286,34 @@
         /**
          * Elimina un comics e relative release.
          *
-         * @param      {String}  cid     l'identificativo del comics da eliminare
          * @param      {String}  sid     [opzionale] identificativo della sincronizzazione
+         * @param      {String}  cid     l'identificativo del comics da eliminare
          * @return     {Promise}  nella promise viene ritornato il comics eliminato
          */
-        removeComics: function(cid, sid) {
+        removeComics: function(sid, cid) {
+            if (cid === undefined) {
+                cid = sid;
+                sid = undefined;
+            }
             const filter = (sid === undefined ? { "cid": cid } : { "cid": cid, "sid": sid });
             return Release.remove(filter)
                 .then(() => Comic.findOneAndRemove(filter));
+        },
+
+        /**
+         * Elimina tutti i comics e relative release.
+         * Risultato operazione (r): 
+         * - r.result.ok -> 1 se il comando è stato eseguito correttamente
+         * - r.result.n -> numero di comics eliminati
+         *
+         * @see        http://mongodb.github.io/node-mongodb-native/2.2/api/Collection.html#~deleteWriteOpResult
+         * @param      {String}  sid     [opzionale] identificativo della sincronizzazione
+         * @return     {Promise}  nella promessa viene ritornato il risultato dell'operazione
+         */
+        clearComics: function(sid) {
+            const filter = (sid === undefined ? {} : { "sid": sid });
+            return Release.remove(filter)
+                .then(() => Comic.remove(filter));
         },
 
         /**
@@ -286,7 +331,96 @@
             } else {
                 return new Release(releases[0]).save();
             }
+        },
+
+        /**
+         * Modfifica una release esistente. 
+         * Il cid e il numero della release non possono essere modificati.
+         *
+         * @param      {String}  sid     [opzionale] identificativo della sincronizzazione
+         * @param      {String} cid l'identificativo del comics da modificare
+         * @param      {Number} number il numero della release
+         * @param      {Release}  release    la release modificata
+         * @return     {Promise}  nella promise viene ritornata la release modificata
+         */
+        updateRelease: function(sid, cid, number, release) {
+            if (release === undefined) {
+                release = number;
+                number = cid;
+                cid = sid;
+                sid = undefined;
+            }
+            const filter = (sid === undefined ? { "cid": cid, "number": number } : { "cid": cid, "number": number, "sid": sid });
+            const update = Object.assign({}, release);
+            delete update.cid;
+            delete update.number;
+            return Release.findOneAndUpdate(filter, update, { "new": true, "runValidators": true }).exec();
+        },
+
+        /**
+         * Aggiunge una release o la aggiorna se già esiste.
+         *
+         * @param      {String}  sid     [opzionale] identificativo della sincronizzazione
+         * @param      {String}  cid     l'identificativo del comics
+         * @param      {Number} number il numero della release da modificare o aggiungere
+         * @param      {Release}  release  la release contenente le modifiche
+         * @return     {Promise}  nella promise viene ritornato la release modificata
+         */
+        addOrUpdateRelease: function(sid, cid, number, release) {
+            if (release === undefined) {
+                release = number;
+                number = cid;
+                cid = sid;
+                sid = undefined;
+            }
+            const filter = (sid === undefined ? { "cid": cid, "number": number } : { "cid": cid, "number": number, "sid": sid });
+            const update = Object.assign({}, release);
+            return Q.try(function() {
+                if (update.hasOwnProperty('sid')) {
+                    if (update.sid !== sid) {
+                        throw new Error('Cannot update release with different sid');
+                    }
+                } else if (update.hasOwnProperty('cid')) {
+                    if (update.cid !== cid) {
+                        throw new Error('Cannot update release with different cid');
+                    }
+                } else if (update.hasOwnProperty('number')) {
+                    if (update.number !== number) {
+                        throw new Error('Cannot update release with different number');
+                    }
+                } else {
+                    update.sid = sid;
+                    update.cid = cid;
+                    update.number = number;
+                }
+                return Release.findOneAndUpdate(filter,
+                    update, {
+                        "new": true,
+                        "upsert": true,
+                        "setDefaultsOnInsert": true,
+                        "runValidators": true
+                    }).exec();
+            });
+        },
+
+        /**
+         * Elimina una release.
+         *
+         * @param      {String}  sid     [opzionale] identificativo della sincronizzazione
+         * @param      {String}  cid     l'identificativo del comics
+         * @param      {Number} number il numero della release da eliminare
+         * @return     {Promise}  nella promise viene ritornato la release eliminato
+         */
+        removeRelease: function(sid, cid, number) {
+            if (number === undefined) {
+                number = cid;
+                cid = sid;
+                sid = undefined;
+            }
+            const filter = (sid === undefined ? { "cid": cid, "number": number } : { "cid": cid, "number": number, "sid": sid });
+            return Release.findOneAndRemove(filter);
         }
+
     };
 
     module.exports = db;

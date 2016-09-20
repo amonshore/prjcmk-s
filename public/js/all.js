@@ -175,8 +175,12 @@
 'use strict';
 
 (function ($) {
+    var socket = void 0;
+
     JSVIEW.define('synccomics', {
         ready: function ready(context) {
+            var $comicsList = $('.comics-list');
+            var sid = $comicsList.attr('data-sid');
             // registro l'evento per la ricerca
             context.on('searchbox:search', function (event, term) {
                 if (term) {
@@ -184,7 +188,7 @@
                         var arrTerms = term.split(/\s/);
                         var termCount = arrTerms.length;
                         var rg = new RegExp('(' + term.replace(/\s/g, '|') + ')', 'gi');
-                        $('.comics-list>.comics').hide().filter(function (index, el) {
+                        $('>.comics', $comicsList).hide().filter(function (index, el) {
                             // tutti i termini della ricerca devono essere trovati
                             var matches = el.attributes['data-search'].value.match(rg);
                             return matches && _.difference(arrTerms, matches).length === 0;
@@ -194,6 +198,24 @@
                     $('.comics-list>.comics').show();
                 }
             });
+            // creo un web socket e invio un messaggio al server per indicare che sono in attesa della sincronizzazione
+            socket = new WebSocket('ws://' + location.host + '/sync/wsh/' + sid);
+            socket.onopen = function (event) {};
+            socket.onerror = function (error) {
+                console.log(error);
+            };
+            socket.onmessage = function (event) {
+                // TODO: gestire messaggi in arrivo
+                var msg = JSON.parse(event.data);
+                // if (msg.message === 'sync timeout') {
+                //     socket.close();
+                // }
+                toastr.success(msg.message);
+            };
+        },
+        destroy: function destroy(context) {
+            socket.send(JSON.stringify({ "message": "stop sync" }));
+            socket.close();
         }
     });
 })(jQuery);

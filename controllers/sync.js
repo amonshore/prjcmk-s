@@ -14,6 +14,24 @@
         express = require('express'),
         router = express.Router();
 
+    const
+        MESSAGE_WAIT_FOR_SYNC = 'wait for sync',
+        MESSAGE_HELLO = 'hello',
+        MESSAGE_PUT_COMICS = 'put comics',
+        MESSAGE_REMOVE_COMICS = 'remove comics',
+        MESSAGE_CLEAR_COMICS = 'clear comics',
+        MESSAGE_PUT_RELEASES = 'put releases',
+        MESSAGE_REMOVE_RELEASES = 'remove releases',
+        MESSAGE_STOP_SYNC = 'stop sync',
+        MESSAGE_SYNC_START = 'sync start',
+        MESSAGE_SYNC_END = 'sync end',
+        MESSAGE_SYNC_TIMEOUT = 'sync timeout',
+        MESSAGE_COMICS_UPDATED = 'comics updated',
+        MESSAGE_COMICS_REMOVED = 'comics removed',
+        MESSAGE_COMICS_CLEARED = 'comics cleared',
+        MESSAGE_RELEASES_UPDATED = 'releases updated',
+        MESSAGE_RELEASES_REMOVED = 'releases removed';
+
     // ogni attività di sincronizzazione avrà la sua entry in questo oggetto dove la chiave è il sid
     const sidconns = {
         // <sid>: <sidconn>
@@ -44,6 +62,7 @@
         const message = JSON.stringify(value);
         logger.debug(sidconn.sid, 'send', message);
         sidconn.clients.filter(client => client != from).forEach((client) => {
+            // TODO: gestire errrori, ad esempio la connessione potrebbe essere stata chiusa dal client
             client.send(message);
         })
     }
@@ -53,7 +72,7 @@
         sidconn.waitFor(conf.sync.syncIdTimeout).then(() => {
             // invio il messaggio a tutti i client
             logger.debug(sidconn.sid, 'timeout');
-            send(sidconn, null, { "message": "sync timeout" });
+            send(sidconn, null, { "message": MESSAGE_SYNC_TIMEOUT });
             sidconn.stopWaiting();
         });
     }
@@ -64,6 +83,16 @@
         comics.syncStatus = +status || db.SyncStatus.DATA_RECEIVED;
         comics.syncTime = +time || Date.now();
         return comics;
+    }
+
+    function normalizeRelease(release, sid, status, time) {
+        release.cid = release.id;
+        release.ordered = release.ordered === 'T';
+        release.purchased = release.purchased === 'T'
+        release.sid = sid;
+        release.syncStatus = +status || db.SyncStatus.DATA_RECEIVED;
+        release.syncTime = +time || Date.now();
+        return release;
     }
 
     function hello(sidconn, data) {
@@ -86,24 +115,8 @@
                 // inserisco tutti i dati ricevuti
                 .then(() => {
                     return db.addComics(
-                            data.comics.map(comics => {
-                                return {
-                                    "cid": comics.id,
-                                    "name": comics.name,
-                                    "series": comics.series,
-                                    "publisher": comics.publisher,
-                                    "authors": comics.authors,
-                                    "price": comics.price,
-                                    "periodicity": comics.periodicity,
-                                    "reserved": comics.reserved,
-                                    "notes": comics.notes,
-                                    //"image": comics.image,
-                                    //"categories": comics.categories,
-                                    "sid": sidconn.sid,
-                                    "syncTime": 0,
-                                    "syncStatus": db.SyncStatus.DATA_RECEIVED
-                                }
-                            }))
+                            data.comics.map(comics =>
+                                normalizeComics(comics, sidconn.sid, db.SyncStatus.DATA_RECEIVED, 0)))
                         .then(docs => {
                             logger.debug(sidconn.sid, 'comics added');
                         });
@@ -111,21 +124,8 @@
                 .then(() => {
                     return db.addReleases(
                             data.comics.reduce((p, comics) => {
-                                return p.concat(comics.releases.map(release => {
-                                    return {
-                                        "relid": comics.id + '_' + release.number,
-                                        "cid": comics.id,
-                                        "number": release.number,
-                                        "date": release.date,
-                                        "price": release.price,
-                                        "ordered": release.ordered === 'T',
-                                        "purchased": release.purchased === 'T',
-                                        "notes": release.notes,
-                                        "sid": sidconn.sid,
-                                        "syncTime": 0,
-                                        "syncStatus": db.SyncStatus.DATA_RECEIVED
-                                    }
-                                }));
+                                return p.concat(comics.releases.map(release =>
+                                    normalizeRelease(release, sidconn.sid, db.SyncStatus.DATA_RECEIVED, 0)));
                             }, []))
                         .then(docs => {
                             logger.debug(sidconn.sid, 'releases added');
@@ -134,31 +134,35 @@
                 // aggiorno lo stato del sid e invio la risposta
                 .then(() => {
                     logger.debug(sidconn.sid, 'update sync status');
-                    return db.updateSync(sidconn.sid, { "lastSync": Date.now(), "status": db.SyncStatus.DATA_RECEIVED });
+                    return db.updateSync(sidconn.sid, {
+                        "lastSync": Date.now(),
+                        "status": db.SyncStatus.DATA_RECEIVED
+                    });
                 })
                 // segnalo che la sincronizzazione è stata accettata e i primi dati sono arrivati
                 .then(() => {
-                    send(sidconn, null, { "message": "sync start" });
+                    send(sidconn, null, { "message": MESSAGE_SYNC_START });
                 })
                 // in caso di errore segnalo che la sincronizzazione è terminata
                 .catch((err) => {
                     logger.error(err);
-                    send(sidconn, null, { "message": "sync end" });
+                    send(sidconn, null, { "message": MESSAGE_SYNC_END });
                 });
 
         } else {
             logger.warn(sidconn.sid, 'hello w/o waiting');
-            send(sidconn, null, { "message": "sync end" });
+            send(sidconn, null, { "message": MESSAGE_SYNC_END });
         }
     }
 
     function putComics(sidconn, ws, data) {
         sidconn.signal();
         Q.all(data instanceof Array ?
-                Q.all(data.map(comics => db.addOrUpdateComics(comics.id, normalizeComics(comics, sidconn.sid)))) :
-                db.addOrUpdateComics(data.id, normalizeComics(data, sidconn.sid)))
+                Q.all(data.map(comics =>
+                    db.addOrUpdateComics(sidconn.sid, comics.id, normalizeComics(comics, sidconn.sid)))) :
+                db.addOrUpdateComics(sidconn.sid, data.id, normalizeComics(data, sidconn.sid)))
             .then((docs) => {
-                send(sidconn, ws, { "message": "comics updated", "data": docs });
+                send(sidconn, ws, { "message": MESSAGE_COMICS_UPDATED, "data": docs });
             }).catch((err) => {
                 logger.error(err);
             });
@@ -167,17 +171,82 @@
     function removeComics(sidconn, ws, data) {
         sidconn.signal();
         Q.all(data instanceof Array ?
-                Q.all(data.map(id => db.removeComics(id, sidconn.sid))) :
-                db.removeComics(data, sidconn.sid))
+                Q.all(data.map(id => db.removeComics(sidconn.sid, id))) :
+                db.removeComics(sidconn.sid, data))
             .then((docs) => {
                 if (docs instanceof Array) {
-                    send(sidconn, ws, { "message": "comics removed", "data": docs.map(doc => doc.cid) });
+                    send(sidconn, ws, { "message": MESSAGE_COMICS_REMOVED, "data": docs.map(doc => doc.cid) });
                 } else if (docs) {
-                    send(sidconn, ws, { "message": "comics removed", "data": docs.cid });
+                    send(sidconn, ws, { "message": MESSAGE_COMICS_REMOVED, "data": docs.cid });
+                } else {
+                    logger.error(sidconn.sid, 'removeComics failed');
                 }
             }).catch((err) => {
                 logger.error(err);
-            });        
+            });
+    }
+
+    function clearComics(sidconn, ws) {
+        sidconn.signal();
+        db.clearComics(sidconn.sid)
+            .then((r) => {
+                if (r.result.ok === 1) {
+                    send(sidconn, ws, { "message": MESSAGE_COMICS_CLEARED });
+                } else {
+                    logger.error(sidconn.sid, 'clearComcis failed')
+                }
+            }).catch((err) => {
+                logger.error(err);
+            });
+    }
+
+    function putReleases(sidconn, ws, data) {
+        sidconn.signal();
+        Q.all(data instanceof Array ?
+                Q.all(data.map(release =>
+                    db.addOrUpdateRelease(sidconn.sid, release.id, release.number,
+                        normalizeRelease(release, sidconn.sid)))) :
+                db.addOrUpdateRelease(sidconn.sid, data.id, data.number, normalizeRelease(data, sidconn.sid)))
+            .then((docs) => {
+                send(sidconn, ws, { "message": MESSAGE_RELEASES_UPDATED, "data": docs });
+            }).catch((err) => {
+                logger.error(err);
+            });
+    }
+
+    function removeReleases(sidconn, ws, data) {
+        sidconn.signal();
+        Q.all(data instanceof Array ?
+                Q.all(data.map(release => db.removeRelease(sidconn.sid, release.id, release.number))) :
+                db.removeRelease(sidconn.sid, data.id, data.number))
+            .then((docs) => {
+                if (docs instanceof Array) {
+                    send(sidconn, ws, {
+                        "message": MESSAGE_RELEASES_REMOVED,
+                        "data": docs.map((doc) => {
+                            return { "cid": doc.cid, "number": doc.number };
+                        })
+                    });
+                } else if (docs) {
+                    send(sidconn, ws, {
+                        "message": MESSAGE_RELEASES_REMOVED,
+                        "data": {
+                            "cid": docs.cid,
+                            "number": docs.number
+                        }
+                    });
+                } else {
+                    logger.error(sidconn.sid, 'removeComics failed');
+                }
+            }).catch((err) => {
+                logger.error(err);
+            });
+    }
+
+    function stopSync(sidconn) {
+        sidconn.signal();
+        // avverto tutti i client che l'attività è terminata, saranno i client a chiudere la connessione
+        send(sidconn, null, { "message": MESSAGE_SYNC_END });
     }
 
     /**
@@ -196,24 +265,29 @@
             logger.debug(sidconn.sid, 'message received', message);
             const msg = JSON.parse(message);
             switch (msg.message) {
-                case 'wait for sync':
+                case MESSAGE_WAIT_FOR_SYNC:
                     waitForSync(sidconn);
                     break;
-                case 'hello':
+                case MESSAGE_HELLO:
                     hello(sidconn, msg.data);
                     break;
-                case 'put comics':
+                case MESSAGE_PUT_COMICS:
                     putComics(sidconn, ws, msg.data);
                     break;
-                case 'remove comics':
+                case MESSAGE_REMOVE_COMICS:
                     removeComics(sidconn, ws, msg.data);
                     break;
-                case 'clear comics':
-                case 'put releases':
-                case 'remove releases':
-                case 'stop sync':
-                    sidconn.signal();
-                    logger.debug('=>', message);
+                case MESSAGE_CLEAR_COMICS:
+                    clearComics(sidconn, ws);
+                    break;
+                case MESSAGE_PUT_RELEASES:
+                    putReleases(sidconn, ws, msg.data);
+                    break;
+                case MESSAGE_REMOVE_RELEASES:
+                    removeReleases(sidconn, ws, msg.data);
+                    break;
+                case MESSAGE_STOP_SYNC:
+                    stopSync(sidconn);
                     break;
                 default:
                     logger.error(new Error('Message not valid: ' + msg.message));
@@ -248,6 +322,7 @@
             .then(docs => {
                 res.render('synccomics.mustache', {
                     "sid": req.params.sid,
+                    "timeout": conf.sync.syncIdTimeout,
                     "comics": docs,
                     "search": function() { //stringa da usare per la ricerca
                         return [this.name, this.publisher, this.authors].join('|').toUpperCase();

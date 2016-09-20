@@ -17,14 +17,7 @@ processo
 7. l'app invia il messaggio "hello" con tutti i dati
 8. il server invia il messaggio "sync start" alla pagina web e all'app
 9. la pagina web carica la nuova pagina con l'elenco dei comics
-
-W => S conn
-W => S wait for sync
-A => S conn
-A => S hello (data)
-S => * sync start
-
-9. all'uscita della pagina web invia il messaggio "stop sync" per segnalare che l'attività è terminata
+10. all'uscita della pagina web invia il messaggio "stop sync" per segnalare che l'attività è terminata
 
 client => server
 ----------------
@@ -59,6 +52,7 @@ client => server
 
 ### remove releases
 * elimina uno o più releases
+* data: { cid, number }
 * data: [{ cid, number }]
 
 ### stop sync
