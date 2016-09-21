@@ -174,6 +174,8 @@
 })(jQuery);
 'use strict';
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 (function ($) {
     var socket = void 0;
 
@@ -197,6 +199,11 @@
                 } else {
                     $('.comics-list>.comics').show();
                 }
+                // TODO: uscire dallo stato di edit (oppure eseguire la ricerca tra le release)
+            });
+            // gestisco le azioni attraverso gli attributi data-action e data-action-params
+            $('[data-action]', $comicsList).click(function (event) {
+                return performAction(sid, event);
             });
             // creo un web socket e invio un messaggio al server per indicare che sono in attesa della sincronizzazione
             socket = new WebSocket('ws://' + location.host + '/sync/wsh/' + sid);
@@ -214,10 +221,40 @@
             };
         },
         destroy: function destroy(context) {
-            socket.send(JSON.stringify({ "message": "stop sync" }));
             socket.close();
         }
     });
+
+    function performAction(sid, event) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        var action = event.target.attributes['data-action'].value;
+        var params = (event.target.attributes['data-action-params'].value || '').split(',');
+        if (actions[action]) {
+            actions[action].apply(actions, [sid].concat(_toConsumableArray(params)));
+        } else {
+            console.error('action ' + action + ' not found');
+        }
+    }
+
+    var actions = {
+        /**
+         * Inizio la fase di editing del comics.
+         */
+        edit: function edit(sid, cid) {
+            toastr.info(cid);
+            $('#modal1').openModal();
+            // entro nello stato di edit (la lista comics viene nascosta)
+            $('.synccomics').addClass('editmode');
+            // TODO: carico il dettalgio
+            //$('.comics-detail')
+            // TODO: carico l'elenco delle release
+            //$('.release-list')
+            // inizializzo materialize
+            $('.comics-detail select').material_select();
+        }
+    };
 })(jQuery);
 'use strict';
 
@@ -280,4 +317,11 @@
 
 String.prototype.capitalize = function () {
 	return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
+//http://stackoverflow.com/a/27406756
+$.fn.ensureVisible = function () {
+	$(this).each(function () {
+		$(this)[0].scrollIntoView();
+	});
 };
