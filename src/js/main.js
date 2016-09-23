@@ -21,6 +21,7 @@
      * @param      {string}   page    nome della pagina da caricare
      */
     function loadPage(page) {
+        console.log('loadPage', page);
         const $pageBody = $('.page-body');
         const $searchbox = $('.searchbox');
         const lastPageId = $pageBody.attr('data-page-id');
@@ -29,6 +30,7 @@
                 if (textStatus === 'success') {
                     // chiave dello script da eseguire
                     const pageId = $pageBody.find('.page').attr('data-page-id');
+                    const pageTitle = $pageBody.find('.page').attr('data-page-title');
                     if (!pageId) {
                         $searchbox.hide();
                         $pageBody.empty();
@@ -38,6 +40,8 @@
                         lastPageId && views[lastPageId] && (views[lastPageId].destroy || $.noop)($pageBody);
                         // mostro o nascondo la barra di ricerca in base alla classe .with-searchbox
                         $searchbox.toggle(!!$pageBody.find('.page.with-searchbox').length);
+                        //
+                        $('nav .page-title').html(pageTitle);
                         // elimino gli eventi legati al contesto
                         $pageBody.off('searchbox:search');
                         // lancio lo script della pagina caricata
@@ -83,15 +87,21 @@
     $(() => {
         // pagina di default
         const defaultPage = 'sync';
+        const loadPageFromHash = (hash) => {
+            const tokens = /^#!(.*)/.exec(hash);
+            if (tokens) {
+                loadPage(tokens[1] || defaultPage);
+            }
+        };
         // evento scatenato al cambio della parte hash
         window.onhashchange = (() => {
-            loadPage(location.hash.substr(1) || defaultPage);
+            loadPageFromHash(location.hash);
         });
         // inizializzo la barra di ricerca
-        initSearchBox($('.searchbox>input'), 3, 500, (term) => {
+        initSearchBox($('.searchbox input'), 3, 500, (term) => {
             $('.page-body').trigger('searchbox:search', term);
         });
         // se non ci sono pagine specificate nell'hash, carico una pagina di default
-        loadPage(location.hash.substr(1) || defaultPage);
+        loadPageFromHash(location.hash || '#!' + defaultPage);
     });
 })(jQuery);

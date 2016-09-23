@@ -21,17 +21,16 @@
                 } else {
                     $('.comics-list>.comics').show();
                 }
-                // TODO: uscire dallo stato di edit (oppure eseguire la ricerca tra le release)
             });
             // gestisco le azioni attraverso gli attributi data-action e data-action-params
             $('[data-action]', $comicsList).click(event => performAction(sid, event));
             // creo un web socket e invio un messaggio al server per indicare che sono in attesa della sincronizzazione
             socket = new WebSocket('ws://' + location.host + '/sync/wsh/' + sid);
             socket.onopen = (event) => {
-
+                //
             };
             socket.onerror = (error) => {
-                console.log(error);
+                console.error(error);
             };
             socket.onmessage = (event) => {
                 // TODO: gestire messaggi in arrivo
@@ -51,8 +50,8 @@
         event.stopPropagation();
         event.preventDefault();
 
-        const action = event.target.attributes['data-action'].value;
-        const params = (event.target.attributes['data-action-params'].value || '').split(',');
+        const action = event.currentTarget.attributes['data-action'].value;
+        const params = (event.currentTarget.attributes['data-action-params'].value || '').split(',');
         if (actions[action]) {
             actions[action](sid, ...params);
         } else {

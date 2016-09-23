@@ -23,6 +23,7 @@
      * @param      {string}   page    nome della pagina da caricare
      */
     function loadPage(page) {
+        console.log('loadPage', page);
         var $pageBody = $('.page-body');
         var $searchbox = $('.searchbox');
         var lastPageId = $pageBody.attr('data-page-id');
@@ -30,6 +31,7 @@
             if (textStatus === 'success') {
                 // chiave dello script da eseguire
                 var pageId = $pageBody.find('.page').attr('data-page-id');
+                var pageTitle = $pageBody.find('.page').attr('data-page-title');
                 if (!pageId) {
                     $searchbox.hide();
                     $pageBody.empty();
@@ -39,6 +41,8 @@
                     lastPageId && views[lastPageId] && (views[lastPageId].destroy || $.noop)($pageBody);
                     // mostro o nascondo la barra di ricerca in base alla classe .with-searchbox
                     $searchbox.toggle(!!$pageBody.find('.page.with-searchbox').length);
+                    //
+                    $('nav .page-title').html(pageTitle);
                     // elimino gli eventi legati al contesto
                     $pageBody.off('searchbox:search');
                     // lancio lo script della pagina caricata
@@ -83,16 +87,22 @@
     $(function () {
         // pagina di default
         var defaultPage = 'sync';
+        var loadPageFromHash = function loadPageFromHash(hash) {
+            var tokens = /^#!(.*)/.exec(hash);
+            if (tokens) {
+                loadPage(tokens[1] || defaultPage);
+            }
+        };
         // evento scatenato al cambio della parte hash
         window.onhashchange = function () {
-            loadPage(location.hash.substr(1) || defaultPage);
+            loadPageFromHash(location.hash);
         };
         // inizializzo la barra di ricerca
-        initSearchBox($('.searchbox>input'), 3, 500, function (term) {
+        initSearchBox($('.searchbox input'), 3, 500, function (term) {
             $('.page-body').trigger('searchbox:search', term);
         });
         // se non ci sono pagine specificate nell'hash, carico una pagina di default
-        loadPage(location.hash.substr(1) || defaultPage);
+        loadPageFromHash(location.hash || '#!' + defaultPage);
     });
 })(jQuery);
 'use strict';
@@ -100,7 +110,7 @@
 (function ($) {
     JSVIEW.define('remote', {
         ready: function ready(context) {
-            $('button[data-action]', context).click(function (e) {
+            $('[data-action]', context).click(function (e) {
                 e.stopPropagation();
                 e.preventDefault();
 
@@ -163,7 +173,7 @@
                     $('#btnNewCode', context).show();
                     socket.close();
                 } else if (msg.message === 'sync start') {
-                    location.href = '#sync/comics/' + sid;
+                    location.href = '#!sync/comics/' + sid;
                 }
             };
         },
@@ -199,7 +209,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
                 } else {
                     $('.comics-list>.comics').show();
                 }
-                // TODO: uscire dallo stato di edit (oppure eseguire la ricerca tra le release)
             });
             // gestisco le azioni attraverso gli attributi data-action e data-action-params
             $('[data-action]', $comicsList).click(function (event) {
@@ -207,9 +216,11 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
             });
             // creo un web socket e invio un messaggio al server per indicare che sono in attesa della sincronizzazione
             socket = new WebSocket('ws://' + location.host + '/sync/wsh/' + sid);
-            socket.onopen = function (event) {};
+            socket.onopen = function (event) {
+                //
+            };
             socket.onerror = function (error) {
-                console.log(error);
+                console.error(error);
             };
             socket.onmessage = function (event) {
                 // TODO: gestire messaggi in arrivo
@@ -229,8 +240,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         event.stopPropagation();
         event.preventDefault();
 
-        var action = event.target.attributes['data-action'].value;
-        var params = (event.target.attributes['data-action-params'].value || '').split(',');
+        var action = event.currentTarget.attributes['data-action'].value;
+        var params = (event.currentTarget.attributes['data-action-params'].value || '').split(',');
         if (actions[action]) {
             actions[action].apply(actions, [sid].concat(_toConsumableArray(params)));
         } else {

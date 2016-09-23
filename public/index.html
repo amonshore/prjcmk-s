@@ -21,12 +21,28 @@
 </head>
 
 <body>
-    <div class="page-header">
-        <h1>comikku web</h1>
-    </div>
-    <div class="searchbox" style="display: none">
-        <i class="material-icons md-18">search</i>
-        <input type="text" placeholder="search">
+    <div class="navbar-fixed">
+        <nav>
+            <div class="header nav-wrapper blue darken-2">
+                <div class="col s8">
+                    <a href="#" class="brand-logo">Comikku Web <span class="page-title"></span></a>
+                    <ul class="right hide-on-med-and-down">
+                        <li><a href="#!">Home</a></li>
+                        <li><a href="#!sync/list">List</a></li>
+                        <li><a href="#!remote">Remote</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="searchbox nav-wrapper lighten-1">
+                <form>
+                    <div class="input-field blue">
+                        <input id="search" type="search" required>
+                        <label for="search"><i class="material-icons">search</i></label>
+                        <i class="material-icons">close</i>
+                    </div>
+                </form>
+            </div>
+        </nav>
     </div>
     <div class="page-body"></div>
     <pre class="debug"></pre>

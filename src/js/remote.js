@@ -1,7 +1,7 @@
 ($ => {
     JSVIEW.define('remote', {
         ready: (context) => {
-            $('button[data-action]', context).click(e => {
+            $('[data-action]', context).click(e => {
                 e.stopPropagation();
                 e.preventDefault();
 
