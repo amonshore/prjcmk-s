@@ -183,10 +183,6 @@
             return Sync.find({}).sort({ "lastSync": -1 });
         },
 
-        getComcisBySid: function(sid) {
-            return Comic.find({ "sid": sid }).sort({ "name": "asc" });
-        },
-
         getSync: function(sid) {
             return Sync.findOne({ "sid": sid });
         },
@@ -203,6 +199,19 @@
             const update = Object.assign({}, sync);
             delete update.sid;
             return Sync.findOneAndUpdate({ "sid": sid }, update, { "new": true, "runValidators": true }).exec();
+        },
+
+        getComcisBySid: function(sid) {
+            return Comic.find({ "sid": sid }).sort({ "name": "asc" });
+        },
+
+        getComics: function(sid, cid) {
+            if (cid === undefined) {
+                cid = sid;
+                sid = undefined;
+            }
+            const filter = (sid === undefined ? { "cid": cid } : { "cid": cid, "sid": sid });
+            return Comic.findOne(filter);
         },
 
         /**

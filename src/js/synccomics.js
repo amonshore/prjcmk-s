@@ -64,16 +64,27 @@
          * Inizio la fase di editing del comics.
          */
         edit: function(sid, cid) {
-            toastr.info(cid);
-            $('#modal1').openModal();
+            const $modal = $('#modalDetail');
+            $('.modal-content', $modal)
+                .load('/sync/comics/' + sid + '/detail/' + cid, (responseText, textStatus, jqXHR) => {
+                    if (textStatus === 'success') {
+                        // inizializzo materialize
+                        $('select', $modal).material_select();
+                        // applico la classe "active" a tutte le label degli input con valore
+                        //  per evitare che la label si sovrapponga al contenuto del campo
+                        $('.input-field input[value!=""]', $modal).siblings('label').addClass('active');
+                        // apro la finestra modale
+                        $modal.openModal();
+                    } else {
+                        toastr.error('err loading detail');
+                    }
+                });
             // entro nello stato di edit (la lista comics viene nascosta)
             $('.synccomics').addClass('editmode');
             // TODO: carico il dettalgio
             //$('.comics-detail')
             // TODO: carico l'elenco delle release
             //$('.release-list')
-            // inizializzo materialize
-            $('.comics-detail select').material_select();
         }
     }
 })(jQuery);

@@ -335,6 +335,23 @@
     });
 
     /**
+     * Restituisce la pagina "synccomicsdetail" rendereizzata con i dati del comics richiesto.
+     */
+    router.get('/comics/:sid/detail/:cid', (req, res) => {
+        db.getComics(req.params.sid, req.params.cid)
+            .then(doc => {
+                if (doc) {
+                    res.render('synccomicsdetail.mustache', doc);
+                } else {
+                    res.status(404).send('Comics not found');
+                }
+            })
+            .catch(err => {
+                res.status(500).send(Ut.parseError(err).descr);
+            });
+    });
+
+    /**
      * Controlla se il sid e' stato richiesto.
      */
     router.get('/check/:sid', (req, res) => {

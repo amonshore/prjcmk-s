@@ -23,6 +23,18 @@
                     assert.ok(doc != null);
                 }).then(done).catch(done);
         });
+        it('find a comics', function(done) {
+            db.getComics("1", "999999999")
+                .then(function(doc) {
+                    assert.ok(doc != null && doc.sid === "1" && doc.cid === "999999999");
+                }).then(done).catch(done);
+        });
+        it('try find a comics that not exists', function(done) {
+            db.getComics("1", "xxx")
+                .then(function(doc) {
+                    assert.ok(doc == null, 'comcis can not be found');
+                }).then(done).catch(done);;
+        });
         it('add 10 comics as array', function(done) {
             db.addComics(Array(10).fill().map((v, i) => {
                     return { "cid": "999999999_" + i, "name": "ccc", "sid": "1" }
@@ -41,27 +53,27 @@
         });
         it('comics without cid is not permitted', function(done) {
             db.addComics({ "name": "ccc", "sid": "1" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'comcis cannot be inserted');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('comics with empty cid is not permitted', function(done) {
             db.addComics({ "cid": " ", "name": "ccc", "sid": "1" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'comcis cannot be inserted');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('comics without name is not permitted', function(done) {
             db.addComics({ "cid": Date.now(), "sid": "1" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'comcis cannot be inserted');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('comics with empty name is not permitted', function(done) {
             db.addComics({ "cid": Date.now(), "name": " ", "sid": "1" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'comcis cannot be inserted');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('update a comics', function(done) {
             db.updateComics("999999999", { "name": "updated" })
@@ -84,9 +96,9 @@
         });
         it('update a comics with empty name is not permitted', function(done) {
             db.updateComics("999999999", { "name": " " })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'comcis cannot be updated');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('add or update 1 comics (that exists)', function(done) {
             db.addOrUpdateComics("1", "999999999", { "name": "updated_2", "sid": "1" })
@@ -104,15 +116,15 @@
         });
         it('update a comics with different cid is not permitted', function(done) {
             db.addOrUpdateComics("1", "999999999", { "cid": "x" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'comcis cannot be updated');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('update a comics with an empty cid is not permitted', function(done) {
             db.addOrUpdateComics("1", " ", { "name": "x" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'comcis cannot be updated');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('remove a comics', function(done) {
             db.removeComics("999999999")
@@ -174,21 +186,21 @@
         });
         it('release without cid is not permitted', function(done) {
             db.addReleases({ "number": 1, "sid": "1" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'release cannot be inserted');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('release without number is not permitted', function(done) {
             db.addReleases({ "cid": "999999999", "sid": "1" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'release cannot be inserted');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('release with empty cid is not permitted', function(done) {
             db.addReleases({ "cid": " ", "sid": "1" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'release cannot be inserted');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('update a release', function(done) {
             db.updateRelease("1", "999999999", 1, { "date": "2016-01-01" })
@@ -225,21 +237,21 @@
         });
         it('update a release with different cid is not permitted', function(done) {
             db.addOrUpdateRelease("1", "999999999", 1, { "cid": "x" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'release cannot be updated');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('update a release with different number is not permitted', function(done) {
             db.addOrUpdateRelease("1", "999999999", 1, { "number": 2 })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'release cannot be updated');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('update a release with an empty cid is not permitted', function(done) {
             db.addOrUpdateRelease("1", " ", 1, { "date": "2016-0-01" })
-                .catch(() => done()).then(function(doc) {
+                .then(function(doc) {
                     assert.ok(doc == null, 'release cannot be updated');
-                }).catch(done);
+                }).then(done).catch(() => done());
         });
         it('remove a release', function(done) {
             db.removeRelease("999999999", 1)
