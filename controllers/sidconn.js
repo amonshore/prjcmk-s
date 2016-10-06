@@ -1,6 +1,6 @@
 (() => {
     "use strict";
-    const Q = require('Q'),
+    const Q = require('q'),
         logger = require('./logger');
 
     /**
